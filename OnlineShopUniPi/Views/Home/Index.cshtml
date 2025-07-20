@@ -1,8 +1,63 @@
 ﻿@{
     ViewData["Title"] = "Home Page";
+    Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+<section class="hero-section">
+    <h1>Καλωσήρθες στο ClothSwap!</h1>
+    <p>Αγόρασε ή πούλησε ρούχα με στυλ, ασφάλεια και άνεση.</p>
+    <a href="#" class="cta-button">Ξεκίνα τώρα</a>
+</section>
+
+<section class="section">
+    <h2>✨ Προτεινόμενα Ρούχα</h2>
+    <div class="products">
+        <div class="product-card">
+            <img src="~/images/products/cloth.png" alt="Jacket" />
+            <h3>Δερμάτινο Μπουφάν</h3>
+            <p>€39.99</p>
+        </div>
+        <div class="product-card">
+            <img src="~/images/products/cloth.png" alt="Dress" />
+            <h3>Καλοκαιρινό Φόρεμα</h3>
+            <p>€24.50</p>
+        </div>
+        <div class="product-card">
+            <img src="~/images/products/cloth.png" alt="Sneakers" />
+            <h3>Αθλητικά Παπούτσια</h3>
+            <p>€55.00</p>
+        </div>
+    </div>
+</section>
+
+<section class="section">
+    <h2>Διάφορα Ρούχα</h2>
+    <div class="products-grid">
+        @for (int i = 1; i <= 9; i++)
+        {
+            <div class="grid-item">
+                <a href="/OrderPage?productId=@i">
+                    <img src="~/images/products/cloth.png" alt="Product @i" />
+                </a>
+                <p>Προϊόν @i</p>
+                <form method="post" action="/Cart/AddOrRemove">
+                    <input type="hidden" name="productId" value="@i" />
+                    <button type="submit" class="cart-btn">Προσθήκη στο Καλάθι</button>
+                </form>
+            </div>
+        }
+    </div>
+
+    <div class="checkout-container">
+        <form method="post" action="/Order/Checkout">
+            <button type="submit" class="checkout-btn">Ολοκλήρωση Παραγγελίας</button>
+        </form>
+    </div>
+</section>
+
+<section class="about-section">
+    <h2>Σχετικά με εμάς</h2>
+    <p>
+        Η ClothSwap είναι μία ιστοσελίδα που δίνει την ικανότητα στους εγγεγραμένους χρήστες της να έρθουν πιο κοντά με άλλους λάτρεις μόδας ώστε να πουλήσουν και να αγοράσουν καινούργια ή παλιά ρούχα. Προσφέρουμε ένα ασφαλές περιβάλλον και αξιόπιστη υποστήριξη για όλους.
+    </p>
+</section>

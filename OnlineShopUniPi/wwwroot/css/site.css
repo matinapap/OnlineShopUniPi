@@ -1,22 +1,657 @@
-html {
-  font-size: 14px;
-}
-
-@media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
-}
-
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
-}
-
-html {
-  position: relative;
-  min-height: 100%;
+﻿/* Βασικές ρυθμίσεις */
+html, body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Arial', sans-serif;
+    background-color: #f9f9f9;
+    color: #222;
+    height: 100%;
 }
 
 body {
-  margin-bottom: 60px;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.container {
+    flex: 1;
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+/* ===== Layout Header ===== */
+header {
+    background-color: #1f1f1f;
+    color: #fff;
+    padding: 20px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo {
+    font-size: 28px;
+    font-weight: bold;
+    color: #d4af37;
+}
+
+.nav-links {
+    display: flex;
+    gap: 20px;
+}
+
+    .nav-links li a {
+        color: white;
+        font-weight: 500;
+        transition: color 0.3s ease;
+    }
+
+        .nav-links li a:hover {
+            color: #d4af37;
+        }
+
+.profile {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+    .profile img {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+
+/* ===== Hero Section ===== */
+.hero-section {
+    background: linear-gradient(to right, #333, #111);
+    color: #fff;
+    padding: 60px 20px;
+    text-align: center;
+}
+
+    .hero-section h1 {
+        font-size: 36px;
+        margin-bottom: 10px;
+    }
+
+    .hero-section p {
+        font-size: 18px;
+        margin-bottom: 20px;
+    }
+
+.cta-button {
+    background-color: #d4af37;
+    color: #1f1f1f;
+    padding: 12px 24px;
+    font-weight: bold;
+    border-radius: 6px;
+    transition: background-color 0.3s ease;
+}
+
+    .cta-button:hover {
+        background-color: #bfa133;
+    }
+
+/* ===== Section Headings ===== */
+.section {
+    padding: 40px 20px;
+    text-align: center;
+}
+
+    .section h2 {
+        font-size: 28px;
+        margin-bottom: 30px;
+    }
+
+/* ===== Προτεινόμενα Ρούχα ===== */
+.products {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.product-card {
+    background-color: white;
+    border-radius: 10px;
+    padding: 20px;
+    width: 200px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    text-align: center;
+    transition: transform 0.2s ease;
+}
+
+    .product-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .product-card img {
+        width: 100%;
+        height: 180px;
+        object-fit: cover;
+        border-radius: 6px;
+        margin-bottom: 10px;
+    }
+
+/* ===== Διάφορα Ρούχα (Grid) ===== */
+.products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 20px;
+    padding: 0 20px;
+}
+
+.grid-item {
+    background-color: white;
+    border-radius: 10px;
+    padding: 10px;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+}
+
+    .grid-item img {
+        width: 100%;
+        height: 150px;
+        object-fit: cover;
+        border-radius: 6px;
+    }
+
+.cart-btn {
+    margin-top: 8px;
+    background-color: #d4af37;
+    color: #1f1f1f;
+    padding: 8px 16px;
+    font-weight: bold;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+    .cart-btn:hover {
+        background-color: #bfa133;
+    }
+
+/* ===== Checkout ===== */
+.checkout-container {
+    text-align: center;
+    margin-top: 30px;
+}
+
+.checkout-btn {
+    background-color: #d4af37;
+    color: #1f1f1f;
+    padding: 12px 24px;
+    font-weight: bold;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+    .checkout-btn:hover {
+        background-color: #bfa133;
+    }
+
+/* ===== About Section ===== */
+.about-section {
+    padding: 40px 20px;
+    background-color: #eee;
+    text-align: center;
+}
+
+    .about-section h2 {
+        font-size: 26px;
+        margin-bottom: 20px;
+    }
+
+/* ===== Footer ===== */
+footer.footer {
+    background-color: #1f1f1f;
+    color: #bbb;
+    padding: 20px;
+    text-align: center;
+}
+
+    footer.footer a {
+        color: #d4af37;
+    }
+
+        footer.footer a:hover {
+            text-decoration: underline;
+        }
+
+/* ===== Responsive tweaks ===== */
+@media (max-width: 768px) {
+    .nav-links {
+        flex-direction: column;
+        gap: 10px;
+        align-items: flex-start;
+    }
+
+    .products, .products-grid {
+        justify-content: center;
+    }
+
+    .hero-section h1 {
+        font-size: 28px;
+    }
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+/* ===== Layout Header ===== */
+header {
+    background-color: #1f1f1f;
+    color: #fff;
+    padding: 20px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo {
+    font-size: 28px;
+    font-weight: bold;
+    color: #d4af37;
+}
+
+.nav-links {
+    display: flex;
+    gap: 20px;
+}
+
+    .nav-links li a {
+        color: white;
+        font-weight: 500;
+        transition: color 0.3s ease;
+    }
+
+        .nav-links li a:hover {
+            color: #d4af37;
+        }
+
+.profile {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+    .profile img {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+
+/* ===== Hero Section ===== */
+.hero-section {
+    background: linear-gradient(to right, #333, #111);
+    color: #fff;
+    padding: 60px 20px;
+    text-align: center;
+}
+
+    .hero-section h1 {
+        font-size: 36px;
+        margin-bottom: 10px;
+    }
+
+    .hero-section p {
+        font-size: 18px;
+        margin-bottom: 20px;
+    }
+
+.cta-button {
+    background-color: #d4af37;
+    color: #1f1f1f;
+    padding: 12px 24px;
+    font-weight: bold;
+    border-radius: 6px;
+    transition: background-color 0.3s ease;
+}
+
+    .cta-button:hover {
+        background-color: #bfa133;
+    }
+
+/* ===== Section Headings ===== */
+.section {
+    padding: 40px 20px;
+    text-align: center;
+}
+
+    .section h2 {
+        font-size: 28px;
+        margin-bottom: 30px;
+    }
+
+/* ===== Προτεινόμενα Ρούχα ===== */
+.products {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.product-card {
+    background-color: white;
+    border-radius: 10px;
+    padding: 20px;
+    width: 200px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    text-align: center;
+    transition: transform 0.2s ease;
+}
+
+    .product-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .product-card img {
+        width: 100%;
+        height: 180px;
+        object-fit: cover;
+        border-radius: 6px;
+        margin-bottom: 10px;
+    }
+
+/* ===== Διάφορα Ρούχα (Grid) ===== */
+.products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 20px;
+    padding: 0 20px;
+}
+
+.grid-item {
+    background-color: white;
+    border-radius: 10px;
+    padding: 10px;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+}
+
+    .grid-item img {
+        width: 100%;
+        height: 150px;
+        object-fit: cover;
+        border-radius: 6px;
+    }
+
+.cart-btn {
+    margin-top: 8px;
+    background-color: #d4af37;
+    color: #1f1f1f;
+    padding: 8px 16px;
+    font-weight: bold;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+    .cart-btn:hover {
+        background-color: #bfa133;
+    }
+
+/* ===== Checkout ===== */
+.checkout-container {
+    text-align: center;
+    margin-top: 30px;
+}
+
+.checkout-btn {
+    background-color: #d4af37;
+    color: #1f1f1f;
+    padding: 12px 24px;
+    font-weight: bold;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+    .checkout-btn:hover {
+        background-color: #bfa133;
+    }
+
+/* ===== About Section ===== */
+.about-section {
+    padding: 40px 20px;
+    background-color: #eee;
+    text-align: center;
+}
+
+    .about-section h2 {
+        font-size: 26px;
+        margin-bottom: 20px;
+    }
+
+
+/* Auth Container */
+.auth-container {
+    display: flex;
+    min-height: 70vh;
+    max-width: 900px;
+    margin: 2rem auto;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+/* Sidebar */
+.sidebar {
+    flex: 1;
+    background: linear-gradient(135deg, #1f1f1f, #3a3a3a);
+    color: white;
+    padding: 3rem 2rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
+}
+
+    .sidebar h1 {
+        font-size: 2.5rem;
+        margin-bottom: 3rem;
+        color: #d4af37;
+        text-decoration: none;
+    }
+
+.auth-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.auth-btn {
+    padding: 12px;
+    border: none;
+    border-radius: 25px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+    .auth-btn.active {
+        background-color: #d4af37;
+        color: #1f1f1f;
+    }
+
+    .auth-btn:not(.active) {
+        background-color: transparent;
+        color: white;
+        border: 2px solid #d4af37;
+    }
+
+/* Form Area */
+.form-area {
+    flex: 1.5;
+    padding: 3rem;
+    position: relative;
+}
+
+.auth-form {
+    display: none;
+    width: 100%;
+}
+
+    .auth-form.active {
+        display: block;
+        animation: fadeIn 0.5s ease;
+    }
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ===== Auth Container ===== */
+
+.auth-form h2 {
+    font-size: 2rem;
+    margin-bottom: 2rem;
+    color: #1f1f1f;
+    text-align: center;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        color: #555;
+    }
+
+    .form-group input {
+        width: 100%;
+        padding: 12px 15px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        font-size: 1rem;
+    }
+
+.submit-btn {
+    width: 100%;
+    padding: 12px;
+    margin-top: 1rem;
+    background-color: #1f1f1f;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+    .submit-btn:hover {
+        background-color: #d4af37;
+    }
+
+/* Responsive */
+@media (max-width: 768px) {
+    .auth-container {
+        flex-direction: column;
+    }
+
+    .sidebar {
+        padding: 2rem;
+    }
+
+    .auth-buttons {
+        flex-direction: row;
+        justify-content: center;
+    }
+
+    .auth-btn {
+        padding: 10px 20px;
+    }
+
+    .form-area {
+        padding: 2rem;
+    }
+}
+
+/* ===== Footer ===== */
+footer {
+    background-color: #1f1f1f;
+    color: #fff;
+    padding: 20px 40px;
+    width: 100%;
+    box-sizing: border-box;
+    margin-top: auto;
+}
+
+.footer-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.copyright {
+    color: #bbb;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+footer a {
+    color: #d4af37;
+    font-weight: 500;
+    transition: color 0.3s ease;
+}
+
+    footer a:hover {
+        color: #bfa133;
+        text-decoration: none;
+    }
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .footer-content {
+        flex-direction: column;
+    }
+
+    .copyright {
+        flex-direction: column;
+        gap: 5px;
+    }
 }
