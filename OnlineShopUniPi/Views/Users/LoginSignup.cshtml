@@ -1,0 +1,128 @@
+﻿@model OnlineShopUniPi.Models.User
+
+@{
+    ViewData["Title"] = "Login";
+}
+
+<div class="auth-container">
+    <div class="sidebar">
+        <h1>Welcome</h1>
+        <div class="auth-buttons">
+            <button id="loginBtn" class="auth-btn active">Login</button>
+            <button id="signupBtn" class="auth-btn">Sign Up</button>
+        </div>
+    </div>
+
+    <div class="form-area">
+
+        <!-- Login Form -->
+        <form id="loginForm" asp-action="Login" class="auth-form active" method="post">
+            @Html.AntiForgeryToken()
+            <h2>Login</h2>
+
+            <div class="form-group">
+                <label for="LoginEmail">Email</label>
+                <input name="lemail" id="LoginEmail" class="form-control" type="email" required
+                       value="@ViewData["LoginEmail"]" />
+            </div>
+
+            <div class="form-group">
+                <label for="LoginPassword">Password</label>
+                <input name="lpassword" id="LoginPassword" type="password" class="form-control" required />
+            </div>
+
+            <!-- Display error messages -->
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <div class="text-danger">
+                    @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                    {
+                        <div>@error.ErrorMessage</div>
+                    }
+                </div>
+            }
+
+            <button type="submit" class="submit-btn">Login</button>
+        </form>
+
+        <!-- Sign Up Form -->
+        <form id="signupForm" class="auth-form" asp-action="Create" method="post" onsubmit="return validateFields()">
+            @Html.AntiForgeryToken()
+            <h2>Sign Up</h2>
+
+            <div class="form-group">
+                <label asp-for="FirstName"></label>
+                <input asp-for="FirstName" class="form-control" required />
+                <span asp-validation-for="FirstName" class="text-danger"></span>
+                <small class="hint">* Μόνο λατινικοί χαρακτήρες και κενά (π.χ. John)</small>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="LastName"></label>
+                <input asp-for="LastName" class="form-control" required />
+                <span asp-validation-for="LastName" class="text-danger"></span>
+                <small class="hint">* Μόνο λατινικοί χαρακτήρες και κενά (π.χ. Smith)</small>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Email"></label>
+                <input asp-for="Email" class="form-control" type="email" required />
+                <span asp-validation-for="Email" class="text-danger"></span>
+                <small class="hint">* Πρέπει να είναι έγκυρο email (π.χ. name@example.com)</small>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="PhoneNumber"></label>
+                <input asp-for="PhoneNumber" class="form-control" required />
+                <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                <small class="hint">* Μόνο αριθμοί (π.χ. 6981234567)</small>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Country"></label>
+                <select asp-for="Country" id="countrySelect" name="Country" class="form-control" required></select>
+                <span asp-validation-for="Country" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="City"></label>
+                <select asp-for="City" id="citySelect" name="City" class="form-control" required></select>
+                <span asp-validation-for="City" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Address"></label>
+                <input asp-for="Address" class="form-control" required />
+                <span asp-validation-for="Address" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="PasswordHash">Password</label>
+                <input asp-for="PasswordHash" type="password" class="form-control" required />
+                <span asp-validation-for="PasswordHash" class="text-danger"></span>
+                <small class="hint">* Τουλάχιστον 8 χαρακτήρες, με 1 κεφαλαίο γράμμα και 1 αριθμό</small>
+            </div>
+
+            <div class="form-group">
+                <label for="confirmPassword">Confirm Password</label>
+                <input id="ConfirmPassword" type="password" name="ConfirmPassword" class="form-control" required />
+                <small class="hint">* Πρέπει να είναι ίδιο με το Password</small>
+            </div>
+
+            <button type="submit" class="submit-btn">Sign Up</button>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+
+    <script>
+        $(document).ready(function () {
+            var formToShow = "@ViewData["Form"]";
+            if (formToShow === "signup") {
+                $('#signupBtn').click();
+            }
+        });
+    </script>
+}

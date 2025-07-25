@@ -1,4 +1,5 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using OnlineShopUniPi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -9,6 +10,15 @@ builder.Services.AddControllersWithViews();
 // My DI for EF
 builder.Services.AddDbContext<OnlineStoreDBContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// Cookie Authentication
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.LoginPath = "/Users/LoginSignup"; // Πού θα πηγαίνει αν δεν είναι logged in
+        options.AccessDeniedPath = "/Users/AccessDenied"; // Optional
+        options.ExpireTimeSpan = TimeSpan.FromMinutes(60); // Optional
+    });
 
 var app = builder.Build();
 
@@ -25,6 +35,8 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+// Enable authentication and authorization (authentication must be before authorization)
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllerRoute(

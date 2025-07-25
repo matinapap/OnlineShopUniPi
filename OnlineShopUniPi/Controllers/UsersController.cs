@@ -6,6 +6,13 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using OnlineShopUniPi.Models;
+using System.Security.Cryptography;
+using System.Text;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Identity;
+using System.Security.Claims;
+
 
 namespace OnlineShopUniPi.Controllers
 {
@@ -18,10 +25,71 @@ namespace OnlineShopUniPi.Controllers
             _context = context;
         }
 
+        private string HashPassword(string password)
+        {
+            using (var sha256 = SHA256.Create())
+            {
+                var bytes = Encoding.UTF8.GetBytes(password);
+                var hash = sha256.ComputeHash(bytes);
+                return Convert.ToBase64String(hash);
+            }
+        }
+
+
         // GET: Users
         public async Task<IActionResult> Index()
         {
             return View(await _context.Users.ToListAsync());
+        }
+
+        public IActionResult LoginSignup()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Login(string lemail, string lpassword)
+        {
+
+            var user = await _context.Users.SingleOrDefaultAsync(u => u.Email == lemail);
+            if (user == null)
+            {
+                ModelState.AddModelError(string.Empty, "Δεν βρέθηκε λογαριασμός με αυτό το email.");
+                ViewData["Form"] = "login";
+                ViewData["LoginEmail"] = lemail; 
+                return View("LoginSignup");
+            }
+
+            var hashedInput = HashPassword(lpassword);
+            if (hashedInput != user.PasswordHash)
+            {
+                ModelState.AddModelError(string.Empty, "Λάθος κωδικός.");
+                ViewData["Form"] = "login";
+                ViewData["LoginEmail"] = lemail; // preserves email
+                return View("LoginSignup");
+            }
+
+            // If the check passes, proceed with login
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
+                new Claim(ClaimTypes.Name, user.FirstName),
+                new Claim(ClaimTypes.Email, user.Email)
+            };
+
+            var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+            var principal = new ClaimsPrincipal(identity);
+            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
+
+            return RedirectToAction("Index", "Home");
+        }
+
+
+        public async Task<IActionResult> Logout()
+        {
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            return RedirectToAction("Index", "Home");
         }
 
         // GET: Users/Details/5
@@ -57,12 +125,28 @@ namespace OnlineShopUniPi.Controllers
         {
             if (ModelState.IsValid)
             {
+                var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.Email == user.Email);
+                if (existingUser != null)
+                {
+                    ModelState.AddModelError("Email", "Το email χρησιμοποιείται ήδη.");
+                    ViewData["Form"] = "signup";
+                    return View("LoginSignup", user); // Early return, do not proceed with saving
+                }
+
+                //Hashing the password
+                user.PasswordHash = HashPassword(user.PasswordHash);
+
                 _context.Add(user);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            return View(user);
+
+            ViewData["Form"] = "signup";
+            return View("LoginSignup", user);
         }
+
+
+
 
         // GET: Users/Edit/5
         public async Task<IActionResult> Edit(int? id)

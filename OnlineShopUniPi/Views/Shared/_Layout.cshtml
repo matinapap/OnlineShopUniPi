@@ -23,7 +23,7 @@
         @*     <img src="~/images/user_profile.png" alt="User Profile" /> *@
         @*     <span class="username">Login</span> *@
         @* </div> *@
-        <a asp-controller="Home" asp-action="LoginSignup" class="profile-link">
+        <a asp-controller="Users" asp-action="LoginSignup" class="profile-link">
             <div class="profile">
                 <img src="~/images/user_profile.png" alt="User Profile" />
                 <span class="username">Login</span>
@@ -48,5 +48,6 @@
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
+    @await RenderSectionAsync("AlertScript", required: false)
 </body>
 </html>
