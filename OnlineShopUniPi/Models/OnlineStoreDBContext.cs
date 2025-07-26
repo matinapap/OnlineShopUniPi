@@ -35,7 +35,7 @@ public partial class OnlineStoreDBContext : DbContext
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
-        => optionsBuilder.UseSqlServer("Server=LAPTOP-T3OGSFVB;Database=OnlineStoreDB;Trusted_Connection=True; Trust Server Certificate=True");
+        => optionsBuilder.UseSqlServer("Server=LAPTOP-T3OGSFVB;Database=OnlineStoreDB;Trusted_Connection=True;Trust Server Certificate=True");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -140,6 +140,8 @@ public partial class OnlineStoreDBContext : DbContext
             entity.HasKey(e => e.UserId).HasName("PK__Users__B9BE370F2DF444E2");
 
             entity.Property(e => e.RegistrationDate).HasDefaultValueSql("(getdate())");
+            entity.Property(e => e.Role).HasDefaultValue("User");
+            entity.Property(e => e.Username).HasDefaultValue("");
         });
 
         OnModelCreatingPartial(modelBuilder);

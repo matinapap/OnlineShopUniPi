@@ -65,6 +65,13 @@
             </div>
 
             <div class="form-group">
+                <label asp-for="Username"></label>
+                <input asp-for="Username" id="Username" class="form-control" required />
+                <span asp-validation-for="Username" class="text-danger"></span>
+                <small class="hint">* Μόνο μικρά λατινικά, παύλα _ και τελεία .</small>
+            </div>
+
+            <div class="form-group">
                 <label asp-for="Email"></label>
                 <input asp-for="Email" class="form-control" type="email" required />
                 <span asp-validation-for="Email" class="text-danger"></span>
@@ -109,6 +116,8 @@
                 <small class="hint">* Πρέπει να είναι ίδιο με το Password</small>
             </div>
 
+            <input type="hidden" asp-for="Role" value="User" />
+
             <button type="submit" class="submit-btn">Sign Up</button>
         </form>
     </div>
@@ -123,6 +132,12 @@
             if (formToShow === "signup") {
                 $('#signupBtn').click();
             }
+        });
+
+        $(document).ready(function() {
+            $('#loginForm').submit(function() {
+                $('[data-valmsg-for="Role"]').hide();
+            });
         });
     </script>
 }

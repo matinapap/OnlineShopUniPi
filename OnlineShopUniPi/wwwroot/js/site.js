@@ -96,6 +96,7 @@ async function loadCities(country, citySelect) {
 function validateFields() {
     const firstName = document.getElementById('FirstName').value.trim();
     const lastName = document.getElementById('LastName').value.trim();
+    const username = document.getElementById('Username').value.trim();
     const email = document.getElementById('Email').value.trim();
     const phoneNumber = document.getElementById('PhoneNumber').value.trim();
     const city = document.getElementById('citySelect').value;
@@ -104,6 +105,7 @@ function validateFields() {
     const confirmPassword = document.getElementById('ConfirmPassword').value;
 
     const nameRegex = /^[A-Za-z\s]+$/;
+    const usernameRegex = /^[a-z._]+$/;  
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const phoneRegex = /^\d+$/;
     const passwordRegex = /^(?=.*[A-Z])(?=.*\d).{8,}$/;
@@ -115,6 +117,11 @@ function validateFields() {
 
     if (!nameRegex.test(lastName)) {
         alert("Το πεδίο 'Last Name' πρέπει να περιέχει μόνο λατινικούς χαρακτήρες και κενά.");
+        return false;
+    }
+
+    if (!usernameRegex.test(username)) {
+        alert("Το πεδίο 'Username' πρέπει να περιέχει μόνο μικρά λατινικά γράμματα, παύλα (_) και τελεία (.).");
         return false;
     }
 

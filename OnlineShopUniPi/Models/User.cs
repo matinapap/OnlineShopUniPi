@@ -61,6 +61,16 @@ public partial class User
     [Column("registration_date", TypeName = "datetime")]
     public DateTime? RegistrationDate { get; set; }
 
+    [Column("username")]
+    [StringLength(100)]
+    [Unicode(false)]
+    public string Username { get; set; } = null!;
+
+    [Column("role")]
+    [StringLength(10)]
+    [Unicode(false)]
+    public string Role { get; set; } = null!;
+
     [InverseProperty("User")]
     public virtual ICollection<Favorite> Favorites { get; set; } = new List<Favorite>();
 
