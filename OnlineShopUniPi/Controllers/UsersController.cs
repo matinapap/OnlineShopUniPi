@@ -82,7 +82,7 @@ namespace OnlineShopUniPi.Controllers
             var principal = new ClaimsPrincipal(identity);
             await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
 
-            return RedirectToAction("Index", "Home");
+            return RedirectToAction("Details", new { id = user.UserId });
         }
 
 
@@ -139,7 +139,7 @@ namespace OnlineShopUniPi.Controllers
 
                 _context.Add(user);
                 await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction("Details", new { id = user.UserId });
             }
 
             ViewData["Form"] = "signup";

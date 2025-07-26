@@ -32,7 +32,7 @@
             </div>
 
             <!-- Display error messages -->
-            @if (!ViewData.ModelState.IsValid)
+            @if (!ViewData.ModelState.IsValid && ViewData["Form"]?.ToString() == "login")
             {
                 <div class="text-danger">
                     @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))

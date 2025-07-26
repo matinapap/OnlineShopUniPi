@@ -9,7 +9,7 @@
 </head>
 <body>
     <header class="main-header">
-        <div class="logo">ClothSwap</div>
+        <div class="logo"><a asp-controller="Home" asp-action="Index">ClothSwap</a></div>
         <nav>
             <ul class="nav-links">
                 <li><a asp-controller="Home" asp-action="Index">Home</a></li>
@@ -25,7 +25,7 @@
         @* </div> *@
         <a asp-controller="Users" asp-action="LoginSignup" class="profile-link">
             <div class="profile">
-                <img src="~/images/user_profile.png" alt="User Profile" />
+                <img src="~/images/resources/user_profile.png" alt="User Profile" />
                 <span class="username">Login</span>
             </div>
         </a>
