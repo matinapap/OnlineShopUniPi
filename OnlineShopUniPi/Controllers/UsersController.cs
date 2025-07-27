@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Hosting;
 
 
 namespace OnlineShopUniPi.Controllers
@@ -19,10 +20,12 @@ namespace OnlineShopUniPi.Controllers
     public class UsersController : Controller
     {
         private readonly OnlineStoreDBContext _context;
+        private readonly IWebHostEnvironment _webHostEnvironment;
 
-        public UsersController(OnlineStoreDBContext context)
+        public UsersController(OnlineStoreDBContext context, IWebHostEnvironment webHostEnvironment)
         {
             _context = context;
+            _webHostEnvironment = webHostEnvironment;
         }
 
         private string HashPassword(string password)
@@ -165,40 +168,64 @@ namespace OnlineShopUniPi.Controllers
             return View(user);
         }
 
+
         // POST: Users/Edit/5
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("UserId,FirstName,LastName,Email,PasswordHash,PhoneNumber,ProfilePictureUrl,Address,City,Country,RegistrationDate")] User user)
+        public async Task<IActionResult> Edit(int id, IFormFile ProfilePictureFile)
         {
-            if (id != user.UserId)
-            {
+            var userFromDb = await _context.Users.FindAsync(id);
+            if (userFromDb == null)
                 return NotFound();
+
+            var currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            if (currentUserId != id)
+                return Forbid();
+
+            var success = await TryUpdateModelAsync(userFromDb, "",
+                u => u.FirstName,
+                u => u.LastName,
+                u => u.Username,
+                u => u.Email,
+                u => u.PhoneNumber,
+                u => u.Address,
+                u => u.City,
+                u => u.Country);
+
+            if (!success)
+                return View(userFromDb);
+
+            // Επεξεργασία φωτογραφίας
+            if (ProfilePictureFile != null && ProfilePictureFile.Length > 0)
+            {
+                var fileExt = Path.GetExtension(ProfilePictureFile.FileName);
+                var fileName = $"{userFromDb.Username}{fileExt}";
+                var folderPath = Path.Combine(_webHostEnvironment.WebRootPath, "images", "users");
+                var savePath = Path.Combine(folderPath, fileName);
+
+                using (var stream = new FileStream(savePath, FileMode.Create))
+                {
+                    await ProfilePictureFile.CopyToAsync(stream);
+                }
+
+                userFromDb.ProfilePictureUrl = $"/users/{fileName}";
             }
 
-            if (ModelState.IsValid)
+            try
             {
-                try
-                {
-                    _context.Update(user);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!UserExists(user.UserId))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                return RedirectToAction(nameof(Index));
+                await _context.SaveChangesAsync();
+                return RedirectToAction(nameof(Details), new { id = userFromDb.UserId });
             }
-            return View(user);
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!_context.Users.Any(e => e.UserId == id))
+                    return NotFound();
+                throw;
+            }
         }
+
 
         // GET: Users/Delete/5
         public async Task<IActionResult> Delete(int? id)

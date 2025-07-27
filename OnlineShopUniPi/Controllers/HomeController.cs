@@ -1,5 +1,7 @@
 using System.Diagnostics;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using OnlineShopUniPi.Models;
 
 namespace OnlineShopUniPi.Controllers
@@ -7,10 +9,14 @@ namespace OnlineShopUniPi.Controllers
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
+        private readonly OnlineStoreDBContext _context;
+        private readonly IWebHostEnvironment _webHostEnvironment;
 
-        public HomeController(ILogger<HomeController> logger)
+        public HomeController(ILogger<HomeController> logger, OnlineStoreDBContext context, IWebHostEnvironment webHostEnvironment)
         {
             _logger = logger;
+            _context = context;
+            _webHostEnvironment = webHostEnvironment;
         }
 
         public IActionResult Index()

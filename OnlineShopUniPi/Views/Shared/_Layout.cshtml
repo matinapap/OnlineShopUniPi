@@ -1,4 +1,7 @@
-﻿<!DOCTYPE html>
+﻿@using Microsoft.AspNetCore.Authentication
+@using Microsoft.AspNetCore.Authorization
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -9,7 +12,10 @@
 </head>
 <body>
     <header class="main-header">
-        <div class="logo"><a asp-controller="Home" asp-action="Index">ClothSwap</a></div>
+        <div class="logo">
+            <a asp-controller="Home" asp-action="Index">ClothSwap</a>
+        </div>
+
         <nav>
             <ul class="nav-links">
                 <li><a asp-controller="Home" asp-action="Index">Home</a></li>
@@ -19,16 +25,21 @@
                 <li><a href="#">Contact</a></li>
             </ul>
         </nav>
-        @* <div class="profile"> *@
-        @*     <img src="~/images/user_profile.png" alt="User Profile" /> *@
-        @*     <span class="username">Login</span> *@
-        @* </div> *@
-        <a asp-controller="Users" asp-action="LoginSignup" class="profile-link">
+
+        <div class="profile-link">
             <div class="profile">
                 <img src="~/images/resources/user_profile.png" alt="User Profile" />
-                <span class="username">Login</span>
+                @if (User.Identity.IsAuthenticated)
+                {
+                    var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                    <a asp-controller="Users" asp-action="Details" asp-route-id="@userId" class="username"><span class="username">@User.Identity.Name</span></a>
+                }
+                else
+                {
+                    <a asp-controller="Users" asp-action="LoginSignup" class="username">Login</a>
+                }
             </div>
-        </a>
+        </div>
     </header>
 
     <div class="main-content">
