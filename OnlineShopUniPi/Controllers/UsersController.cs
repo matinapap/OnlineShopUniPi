@@ -113,6 +113,30 @@ namespace OnlineShopUniPi.Controllers
             return View(user);
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ChangePassword(int userId, string NewPassword, string ConfirmPassword)
+        {
+            if (NewPassword != ConfirmPassword)
+            {
+                TempData["Error"] = "Passwords do not match.";
+                return RedirectToAction("Details", new { id = userId });
+            }
+
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null)
+                return NotFound();
+
+            // Κάνε hash το νέο password πριν το αποθηκεύσεις
+            user.PasswordHash = HashPassword(NewPassword);
+
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = "Password updated successfully.";
+            return RedirectToAction("Details", new { id = userId });
+        }
+
+
         // GET: Users/Create
         public IActionResult Create()
         {
