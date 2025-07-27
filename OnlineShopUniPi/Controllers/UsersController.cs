@@ -168,13 +168,9 @@ namespace OnlineShopUniPi.Controllers
             return View(user);
         }
 
-
-        // POST: Users/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, IFormFile ProfilePictureFile)
+        public async Task<IActionResult> Edit(int id, IFormFile? ProfilePictureFile)  // nullable
         {
             var userFromDb = await _context.Users.FindAsync(id);
             if (userFromDb == null)
@@ -184,6 +180,10 @@ namespace OnlineShopUniPi.Controllers
             if (currentUserId != id)
                 return Forbid();
 
+            // Αφαιρούμε το ModelState error αν υπάρχει για το ProfilePictureFile
+            ModelState.Remove("ProfilePictureFile");
+
+            // Προσπάθησε να ενημερώσεις τα πεδία από το form (εκτός της εικόνας)
             var success = await TryUpdateModelAsync(userFromDb, "",
                 u => u.FirstName,
                 u => u.LastName,
@@ -195,14 +195,27 @@ namespace OnlineShopUniPi.Controllers
                 u => u.Country);
 
             if (!success)
+            {
+                foreach (var entry in ModelState)
+                {
+                    foreach (var error in entry.Value.Errors)
+                    {
+                        Console.WriteLine($"ModelState error in '{entry.Key}': {error.ErrorMessage}");
+                    }
+                }
                 return View(userFromDb);
+            }
 
-            // Επεξεργασία φωτογραφίας
+            // Ανέβασε νέα εικόνα αν υπάρχει
             if (ProfilePictureFile != null && ProfilePictureFile.Length > 0)
             {
                 var fileExt = Path.GetExtension(ProfilePictureFile.FileName);
                 var fileName = $"{userFromDb.Username}{fileExt}";
                 var folderPath = Path.Combine(_webHostEnvironment.WebRootPath, "images", "users");
+
+                if (!Directory.Exists(folderPath))
+                    Directory.CreateDirectory(folderPath);
+
                 var savePath = Path.Combine(folderPath, fileName);
 
                 using (var stream = new FileStream(savePath, FileMode.Create))
@@ -211,6 +224,16 @@ namespace OnlineShopUniPi.Controllers
                 }
 
                 userFromDb.ProfilePictureUrl = $"/users/{fileName}";
+            }
+            else
+            {
+                // Αν δεν ανέβηκε νέα εικόνα, πάρε το URL από το hidden input
+                var profilePictureUrlFromForm = Request.Form["ProfilePictureUrl"].ToString();
+                if (!string.IsNullOrWhiteSpace(profilePictureUrlFromForm))
+                {
+                    userFromDb.ProfilePictureUrl = profilePictureUrlFromForm;
+                }
+                // Αν είναι κενό, κρατάμε την προηγούμενη τιμή
             }
 
             try
@@ -225,6 +248,9 @@ namespace OnlineShopUniPi.Controllers
                 throw;
             }
         }
+
+
+
 
 
         // GET: Users/Delete/5

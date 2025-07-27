@@ -1,0 +1,44 @@
+﻿@using System.Security.Claims
+@inject OnlineShopUniPi.Models.OnlineStoreDBContext _context
+
+@{
+    string profilePicUrl = Url.Content("~/images/resources/user_profile.png");
+    string? username = null;
+    string? userId = null;
+
+    if (User.Identity?.IsAuthenticated ?? false)
+    {
+        userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (int.TryParse(userId, out var id))
+        {
+            var user = _context.Users.FirstOrDefault(u => u.UserId == id);
+            if (user != null)
+            {
+                username = user.Username;
+                if (!string.IsNullOrEmpty(user.ProfilePictureUrl))
+                {
+                    profilePicUrl = Url.Content("~/images" + user.ProfilePictureUrl);
+                }
+            }
+        }
+    }
+}
+
+<div class="profile">
+    <img src="@profilePicUrl"
+         class="rounded-circle img-fluid shadow"
+         style="width: 50px; height: 50px; object-fit: cover;"
+         alt="Profile Picture" />
+
+    @if (User.Identity?.IsAuthenticated ?? false)
+    {
+        <a asp-controller="Users" asp-action="Details" asp-route-id="@userId" class="username">
+            <span class="username">@username</span>
+        </a>
+    }
+    else
+    {
+        <a asp-controller="Users" asp-action="LoginSignup" class="username">Login</a>
+    }
+</div>

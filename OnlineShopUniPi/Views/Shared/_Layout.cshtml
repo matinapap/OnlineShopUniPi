@@ -27,19 +27,10 @@
         </nav>
 
         <div class="profile-link">
-            <div class="profile">
-                <img src="~/images/resources/user_profile.png" alt="User Profile" />
-                @if (User.Identity.IsAuthenticated)
-                {
-                    var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-                    <a asp-controller="Users" asp-action="Details" asp-route-id="@userId" class="username"><span class="username">@User.Identity.Name</span></a>
-                }
-                else
-                {
-                    <a asp-controller="Users" asp-action="LoginSignup" class="username">Login</a>
-                }
-            </div>
+            @await Html.PartialAsync("_UserProfile")
         </div>
+
+
     </header>
 
     <div class="main-content">
