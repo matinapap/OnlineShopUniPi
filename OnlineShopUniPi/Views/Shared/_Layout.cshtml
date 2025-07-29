@@ -9,6 +9,7 @@
     <title>@ViewData["Title"] - ClothSwap</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body>
     <header class="main-header">
@@ -16,19 +17,58 @@
             <a asp-controller="Home" asp-action="Index">ClothSwap</a>
         </div>
 
-        <nav>
-            <ul class="nav-links">
-                <li><a asp-controller="Home" asp-action="Index">Home</a></li>
-                <li><a href="#">Shop</a></li>
-                <li><a href="#">Sell</a></li>
-                <li><a href="#">About</a></li>
-                <li><a href="#">Contact</a></li>
-            </ul>
-        </nav>
+        @using Microsoft.AspNetCore.Identity
 
-        <div class="profile-link">
-            @await Html.PartialAsync("_UserProfile")
-        </div>
+        @if (User.Identity.IsAuthenticated)
+        {
+            if (User.IsInRole("Admin"))
+            {
+                <nav>
+                    <ul class="nav-links">
+                        <li><a asp-controller="Users" asp-action="Index">Users</a></li>
+                        <li><a href="#">Products</a></li>
+                        <li><a href="#">Orders</a></li>
+                    </ul>
+                </nav>
+
+                <div class="profile-link">
+                    @await Html.PartialAsync("_UserProfile")
+                </div>
+            }
+            else
+            {
+                <nav>
+                    <ul class="nav-links">
+                        <li><a asp-controller="Home" asp-action="Index">Home</a></li>
+                        <li><a asp-controller="Home" asp-action="ClothingPage">Shop</a></li>
+                        <li><a href="#">Sell</a></li>
+                        <li><a href="#">Orders</a></li>
+                        <li><a href="#">My Purchases</a></li>
+                    </ul>
+                </nav>
+
+                <div class="profile-link">
+                    <a href="/wishlist" class="icon-link"><i class="fas fa-heart"></i></a>
+                    <a href="/cart" class="icon-link"><i class="fas fa-shopping-bag"></i></a>
+                    @await Html.PartialAsync("_UserProfile")
+                </div>
+            }
+        }
+        else
+        {
+            <nav>
+                <ul class="nav-links">
+                    <li><a asp-controller="Home" asp-action="Index">Home</a></li>
+                    <li><a asp-controller="Home" asp-action="ClothingPage">Shop</a></li>
+                    <li><a asp-controller="Users" asp-action="LoginSignup">Sell</a></li>
+                </ul>
+            </nav>
+
+            <div class="profile-link">
+                @await Html.PartialAsync("_UserProfile")
+            </div>
+        }
+
 
 
     </header>

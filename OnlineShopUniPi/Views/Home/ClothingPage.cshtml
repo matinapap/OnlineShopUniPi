@@ -1,0 +1,439 @@
+﻿@{
+    ViewData["Title"] = "Clothess";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClothSwap - Κατάστημα Ρούχων</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* Βασικές ρυθμίσεις */
+        html, body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Arial', sans-serif;
+            background-color: #f9f9f9;
+            color: #222;
+            height: 100%;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .container {
+            flex: 1;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        /* ===== Layout Header ===== */
+        header {
+            background-color: #1f1f1f;
+            color: #fff;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: bold;
+            color: #d4af37;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 20px;
+        }
+
+            .nav-links li a {
+                color: white;
+                font-weight: 500;
+                transition: color 0.3s ease;
+            }
+
+                .nav-links li a:hover {
+                    color: #d4af37;
+                }
+
+        .profile {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+            .profile img {
+                width: 32px;
+                height: 32px;
+                border-radius: 50%;
+                object-fit: cover;
+            }
+
+        /* ===== Hero Section ===== */
+        .hero-section {
+            background: linear-gradient(to right, #333, #111);
+            color: #fff;
+            padding: 60px 20px;
+            text-align: center;
+        }
+
+            .hero-section h1 {
+                font-size: 36px;
+                margin-bottom: 10px;
+            }
+
+            .hero-section p {
+                font-size: 18px;
+                margin-bottom: 20px;
+            }
+
+        .cta-button {
+            background-color: #d4af37;
+            color: #1f1f1f;
+            padding: 12px 24px;
+            font-weight: bold;
+            border-radius: 6px;
+            transition: background-color 0.3s ease;
+        }
+
+            .cta-button:hover {
+                background-color: #bfa133;
+            }
+
+        /* ===== Section Headings ===== */
+        .section {
+            padding: 40px 20px;
+            text-align: center;
+        }
+
+            .section h2 {
+                font-size: 28px;
+                margin-bottom: 30px;
+            }
+
+        /* ===== Categories Tabs ===== */
+        .categories {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .category-tab {
+            padding: 10px 20px;
+            background-color: #eee;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+            .category-tab:hover {
+                background-color: #ddd;
+            }
+
+            .category-tab.active {
+                background-color: #1f1f1f;
+                color: white;
+            }
+
+        /* ===== Προτεινόμενα Ρούχα ===== */
+        .products {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .product-card {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            width: 200px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            text-align: center;
+            transition: transform 0.2s ease;
+        }
+
+            .product-card:hover {
+                transform: translateY(-5px);
+            }
+
+            .product-card img {
+                width: 100%;
+                height: 180px;
+                object-fit: cover;
+                border-radius: 6px;
+                margin-bottom: 10px;
+            }
+
+            .product-card h3 {
+                margin: 10px 0;
+                font-size: 16px;
+            }
+
+            .product-card .price {
+                font-weight: bold;
+                color: #d4af37;
+                font-size: 18px;
+            }
+
+        /* ===== Διάφορα Ρούχα (Grid) ===== */
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 20px;
+            padding: 0 20px;
+        }
+
+        .grid-item {
+            background-color: white;
+            border-radius: 10px;
+            padding: 10px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+        }
+
+            .grid-item img {
+                width: 100%;
+                height: 150px;
+                object-fit: cover;
+                border-radius: 6px;
+            }
+
+        .cart-btn {
+            margin-top: 8px;
+            background-color: #d4af37;
+            color: #1f1f1f;
+            padding: 8px 16px;
+            font-weight: bold;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+            .cart-btn:hover {
+                background-color: #bfa133;
+            }
+
+        /* ===== Footer ===== */
+        footer {
+            background-color: #1f1f1f;
+            color: #fff;
+            padding: 20px 40px;
+            width: 100%;
+            box-sizing: border-box;
+            margin-top: auto;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 20px;
+        }
+
+            .footer-links a {
+                color: #bbb;
+                transition: color 0.3s ease;
+            }
+
+                .footer-links a:hover {
+                    color: #d4af37;
+                }
+
+        .social-icons {
+            display: flex;
+            gap: 15px;
+        }
+
+            .social-icons a {
+                color: #bbb;
+                font-size: 20px;
+                transition: color 0.3s ease;
+            }
+
+                .social-icons a:hover {
+                    color: #d4af37;
+                }
+
+        .copyright {
+            width: 100%;
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">ClothSwap</div>
+        <ul class="nav-links">
+            <li><a href="#"><i class="fas fa-home"></i> Αρχική</a></li>
+            <li><a href="#"><i class="fas fa-store"></i> Κατάστημα</a></li>
+            <li><a href="#"><i class="fas fa-tags"></i> Κατηγορίες</a></li>
+            <li><a href="#"><i class="fas fa-shopping-bag"></i> Πώληση</a></li>
+            <li><a href="#"><i class="fas fa-info-circle"></i> Σχετικά</a></li>
+        </ul>
+        <div class="profile">
+            <a href="#"><i class="fas fa-user"></i></a>
+            <a href="#"><i class="fas fa-shopping-cart"></i></a>
+        </div>
+    </header>
+
+    <div class="hero-section">
+        <h1>Καλωσήρθες στο ClothSwap!</h1>
+        <p>Αγόρασε ή πούλησε ρούχα με στυλ, ασφάλεια και άνεση.</p>
+        <a href="#" class="cta-button">Ξεκίνα τώρα</a>
+    </div>
+
+    <div class="section">
+        <h2>Κατηγορίες</h2>
+        <div class="categories">
+            <div class="category-tab active">Όλα</div>
+            <div class="category-tab">Ανδρικά</div>
+            <div class="category-tab">Γυναικεία</div>
+            <div class="category-tab">Παιδικά</div>
+            <div class="category-tab">Παντόφλες</div>
+            <div class="category-tab">Αξεσουάρ</div>
+            <div class="category-tab">Εποχικά</div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>Προτεινόμενα Ρούχα</h2>
+        <div class="products">
+            <div class="product-card">
+                <img src="https://via.placeholder.com/200x180?text=Δερμάτινο+Μπουφάν" alt="Δερμάτινο Μπουφάν">
+                <h3>Δερμάτινο Μπουφάν</h3>
+                <div class="price">€30.00</div>
+                <button class="cart-btn">Προσθήκη</button>
+            </div>
+            <div class="product-card">
+                <img src="https://via.placeholder.com/200x180?text=Καλοκαιρινό+Φόρεμα" alt="Καλοκαιρινό Φόρεμα">
+                <h3>Καλοκαιρινό Φόρεμα</h3>
+                <div class="price">€24.50</div>
+                <button class="cart-btn">Προσθήκη</button>
+            </div>
+            <div class="product-card">
+                <img src="https://via.placeholder.com/200x180?text=Αθλητικά+Παπούτσια" alt="Αθλητικά Παπούτσια">
+                <h3>Αθλητικά Παπούτσια</h3>
+                <div class="price">€55.00</div>
+                <button class="cart-btn">Προσθήκη</button>
+            </div>
+            <div class="product-card">
+                <img src="https://via.placeholder.com/200x180?text=Τζιν+Jeans" alt="Τζιν Jeans">
+                <h3>Τζιν Jeans</h3>
+                <div class="price">€28.00</div>
+                <button class="cart-btn">Προσθήκη</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>Νέα Άφιξη</h2>
+        <div class="products-grid">
+            <div class="grid-item">
+                <img src="https://via.placeholder.com/150x150?text=Μπλούζα" alt="Μπλούζα">
+                <h4>Μπλούζα</h4>
+                <div class="price">€15.00</div>
+                <button class="cart-btn">Προσθήκη</button>
+            </div>
+            <div class="grid-item">
+                <img src="https://via.placeholder.com/150x150?text=Σορτς" alt="Σορτς">
+                <h4>Σορτς</h4>
+                <div class="price">€12.00</div>
+                <button class="cart-btn">Προσθήκη</button>
+            </div>
+            <div class="grid-item">
+                <img src="https://via.placeholder.com/150x150?text=Παπούτσια" alt="Παπούτσια">
+                <h4>Παπούτσια</h4>
+                <div class="price">€45.00</div>
+                <button class="cart-btn">Προσθήκη</button>
+            </div>
+            <div class="grid-item">
+                <img src="https://via.placeholder.com/150x150?text=Γάντια" alt="Γάντια">
+                <h4>Γάντια</h4>
+                <div class="price">€8.50</div>
+                <button class="cart-btn">Προσθήκη</button>
+            </div>
+            <div class="grid-item">
+                <img src="https://via.placeholder.com/150x150?text=Καπέλο" alt="Καπέλο">
+                <h4>Καπέλο</h4>
+                <div class="price">€10.00</div>
+                <button class="cart-btn">Προσθήκη</button>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-links">
+                <a href="#">Πολιτική Απορρήτου</a>
+                <a href="#">Όροι Χρήσης</a>
+                <a href="#">Επικοινωνία</a>
+                <a href="#">Σχετικά με εμάς</a>
+            </div>
+            <div class="social-icons">
+                <a href="#"><i class="fab fa-facebook"></i></a>
+                <a href="#"><i class="fab fa-instagram"></i></a>
+                <a href="#"><i class="fab fa-twitter"></i></a>
+                <a href="#"><i class="fab fa-pinterest"></i></a>
+            </div>
+            <div class="copyright">
+                &copy; 2025 ClothSwap. Όλα τα δικαιώματα διατηρούνται.
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Απλή λειτουργικότητα για τα tabs
+        document.querySelectorAll('.category-tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                document.querySelector('.category-tab.active').classList.remove('active');
+                this.classList.add('active');
+                // Εδώ θα μπορούσατε να προσθέσετε κώδικα για φιλτράρισμα προϊόντων
+            });
+        });
+
+        // Λειτουργικότητα για το κουμπί προσθήκης στο καλάθι
+        document.querySelectorAll('.cart-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                alert('Το προϊόν προστέθηκε στο καλάθι σας!');
+            });
+        });
+    </script>
+</body>
+</html>

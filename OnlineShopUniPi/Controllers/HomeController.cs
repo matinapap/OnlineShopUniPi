@@ -1,4 +1,4 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -22,6 +22,11 @@ namespace OnlineShopUniPi.Controllers
         public IActionResult Index()
         {
             return View();
+        }
+
+        public IActionResult ClothingPage()
+        {
+            return View(); // Προβάλλει το Views/Home/ClothingPage.cshtml
         }
 
         public IActionResult Privacy()

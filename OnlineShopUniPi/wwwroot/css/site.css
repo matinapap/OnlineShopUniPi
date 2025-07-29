@@ -685,3 +685,20 @@ footer a {
     color: #666;
     margin-top: 4px;
 }
+
+
+.profile-link {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+    .profile-link .icon-link {
+        color: white;
+        font-size: 18px;
+        text-decoration: none;
+    }
+
+        .profile-link .icon-link:hover {
+            color: gold; 
+        }
