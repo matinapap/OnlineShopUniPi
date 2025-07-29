@@ -154,12 +154,23 @@ namespace OnlineShopUniPi.Controllers
 
             if (ModelState.IsValid)
             {
-                var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.Email == user.Email);
-                if (existingUser != null)
+                var existingEmailUser = await _context.Users.FirstOrDefaultAsync(u => u.Email == user.Email);
+                var existingUsernameUser = await _context.Users.FirstOrDefaultAsync(u => u.Username == user.Username);
+
+                if (existingEmailUser != null)
                 {
                     ModelState.AddModelError("Email", "Το email χρησιμοποιείται ήδη.");
+                }
+
+                if (existingUsernameUser != null)
+                {
+                    ModelState.AddModelError("Username", "Το username χρησιμοποιείται ήδη.");
+                }
+
+                if (existingEmailUser != null || existingUsernameUser != null)
+                {
                     ViewData["Form"] = "signup";
-                    return View("LoginSignup", user); // Early return, do not proceed with saving
+                    return View("LoginSignup", user); // Early return
                 }
 
                 //Hashing the password

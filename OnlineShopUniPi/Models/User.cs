@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 namespace OnlineShopUniPi.Models;
 
 [Index("Email", Name = "UQ__Users__AB6E61642D3D7614", IsUnique = true)]
+[Index(nameof(Username), Name = "UQ__Users__Username", IsUnique = true)]
 public partial class User
 {
     [Key]
