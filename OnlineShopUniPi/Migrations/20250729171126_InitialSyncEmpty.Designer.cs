@@ -12,8 +12,8 @@ using OnlineShopUniPi.Models;
 namespace OnlineShopUniPi.Migrations
 {
     [DbContext(typeof(OnlineStoreDBContext))]
-    [Migration("20250726001304_AddUsernameAndRoleToUser")]
-    partial class AddUsernameAndRoleToUser
+    [Migration("20250729171126_InitialSyncEmpty")]
+    partial class InitialSyncEmpty
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -418,10 +418,31 @@ namespace OnlineShopUniPi.Migrations
                         .HasColumnName("registration_date")
                         .HasDefaultValueSql("(getdate())");
 
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(10)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(10)")
+                        .HasDefaultValue("User")
+                        .HasColumnName("role");
+
+                    b.Property<string>("Username")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(100)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(100)")
+                        .HasDefaultValue("")
+                        .HasColumnName("username");
+
                     b.HasKey("UserId")
                         .HasName("PK__Users__B9BE370F2DF444E2");
 
                     b.HasIndex(new[] { "Email" }, "UQ__Users__AB6E61642D3D7614")
+                        .IsUnique();
+
+                    b.HasIndex(new[] { "Username" }, "UQ__Users__Username")
                         .IsUnique();
 
                     b.ToTable("Users");
