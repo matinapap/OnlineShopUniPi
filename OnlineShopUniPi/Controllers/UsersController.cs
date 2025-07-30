@@ -239,7 +239,13 @@ namespace OnlineShopUniPi.Controllers
                 u => u.PhoneNumber,
                 u => u.Address,
                 u => u.City,
-                u => u.Country);
+                u => u.Country,
+                u => u.Role);
+
+            if (User.IsInRole("Admin"))
+            {
+                await TryUpdateModelAsync(userFromDb, "", u => u.Role);
+            }
 
             if (!success)
             {

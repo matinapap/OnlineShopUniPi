@@ -73,6 +73,19 @@
                 <span asp-validation-for="Country" class="text-danger"></span>
             </div>
 
+            @if (User.IsInRole("Admin"))
+            {
+                <div class="form-group">
+                    <label asp-for="Role">User Role</label>
+                    <select asp-for="Role" class="form-control">
+                        <option value="User" selected="@(Model.Role == "User")">User</option>
+                        <option value="Admin" selected="@(Model.Role == "Admin")">Admin</option>
+                    </select>
+                    <span asp-validation-for="Role" class="text-danger"></span>
+                </div>
+            }
+
+
             <button type="submit" class="submit-btn">Save Changes</button>
         </form>
     </div>
