@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Authorization;
 
 
 namespace OnlineShopUniPi.Controllers
@@ -196,6 +197,46 @@ namespace OnlineShopUniPi.Controllers
             return View("LoginSignup", user);
         }
 
+        [Authorize(Roles = "Admin")]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CreatedByAdmin(
+      [Bind("UserId,FirstName,LastName,Email,Username,PasswordHash,PhoneNumber,ProfilePictureUrl,Address,City,Country,Role,RegistrationDate")] User user,
+      string ConfirmPassword)
+        {
+            // Επιβεβαίωση ότι οι κωδικοί ταιριάζουν
+            if (user.PasswordHash != ConfirmPassword)
+            {
+                ModelState.AddModelError("ConfirmPassword", "Οι κωδικοί δεν ταιριάζουν.");
+            }
+
+            // Έλεγχοι αν υπάρχουν ήδη email/username
+            var existingEmailUser = await _context.Users.FirstOrDefaultAsync(u => u.Email == user.Email);
+            var existingUsernameUser = await _context.Users.FirstOrDefaultAsync(u => u.Username == user.Username);
+
+            if (existingEmailUser != null)
+            {
+                ModelState.AddModelError("Email", "Το email χρησιμοποιείται ήδη.");
+            }
+
+            if (existingUsernameUser != null)
+            {
+                ModelState.AddModelError("Username", "Το username χρησιμοποιείται ήδη.");
+            }
+
+            // Αν υπάρχουν λάθη, επιστρέφει στη φόρμα
+            if (!ModelState.IsValid)
+            {
+                return View("Create", user);
+            }
+
+            // Αν όλα είναι ΟΚ, κάνει hash και αποθηκεύει
+            user.PasswordHash = HashPassword(user.PasswordHash);
+            _context.Add(user);
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction("Index");
+        }
 
 
 
@@ -301,10 +342,6 @@ namespace OnlineShopUniPi.Controllers
                 throw;
             }
         }
-
-
-
-
 
         // GET: Users/Delete/5
         public async Task<IActionResult> Delete(int? id)
