@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -12,18 +13,47 @@ namespace OnlineShopUniPi.Controllers
     public class ProductsController : Controller
     {
         private readonly OnlineStoreDBContext _context;
+        private readonly ILogger<ProductsController> _logger;
 
-        public ProductsController(OnlineStoreDBContext context)
+        public ProductsController(OnlineStoreDBContext context, ILogger<ProductsController> logger)
         {
             _context = context;
+            _logger = logger;
+        }
+
+        public IActionResult ProductList()
+        {
+            return View(); 
         }
 
         // GET: Products
         public async Task<IActionResult> Index()
         {
-            var onlineStoreDBContext = _context.Products.Include(p => p.User);
-            return View(await onlineStoreDBContext.ToListAsync());
+            try
+            {
+                var products = await _context.Products
+                    .Include(p => p.User)
+                    .ToListAsync();
+
+                return View(products ?? new List<Product>()); // Πάντα μη-null
+            }
+            catch (Exception ex)
+            {
+                // Logging εδώ
+                return View(new List<Product>());
+            }
         }
+
+        [Authorize]
+        public async Task<IActionResult> GetProducts()
+        {
+            var products = await _context.Products
+                    .Include(p => p.User)
+                    .ToListAsync();
+
+            return View(products ?? new List<Product>());
+        }
+
 
         // GET: Products/Details/5
         public async Task<IActionResult> Details(int? id)

@@ -1,0 +1,65 @@
+﻿@model IEnumerable<OnlineShopUniPi.Models.Product>
+@{
+    ViewData["Title"] = "Τα Προιόντα μου";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h1>Τα Προϊόντα Μου</h1>
+
+@if (Model == null)
+{
+    <div class="alert alert-danger">
+        <strong>Σφάλμα:</strong> Δεν ήταν δυνατή η φόρτωση των προϊόντων.
+    </div>
+    <p>
+        <a asp-action="Create" class="btn btn-success">Δημιουργία Νέου Προϊόντος</a>
+    </p>
+}
+else if (!Model.Any())
+{
+    <div class="alert alert-info">
+        Δεν έχετε προϊόντα προς εμφάνιση.
+    </div>
+    <p>
+        <a asp-action="Create" class="btn btn-success">Δημιουργία Νέου Προϊόντος</a>
+    </p>
+}
+else
+{
+    <p>
+        <a asp-action="Create" class="btn btn-success">Δημιουργία Νέου Προϊόντος</a>
+    </p>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>@Html.DisplayNameFor(model => model.Title)</th>
+                <th>@Html.DisplayNameFor(model => model.Description)</th>
+                <th>@Html.DisplayNameFor(model => model.Category)</th>
+                <th>@Html.DisplayNameFor(model => model.Price)</th>
+                <th>@Html.DisplayNameFor(model => model.Condition)</th>
+                <th>@Html.DisplayNameFor(model => model.CreatedAt)</th>
+                <th>Χρήστης</th> <!-- Changed from "User" -->
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@Html.DisplayFor(modelItem => item.Title)</td>
+                    <td>@Html.DisplayFor(modelItem => item.Description)</td>
+                    <td>@Html.DisplayFor(modelItem => item.Category)</td>
+                    <td>@Html.DisplayFor(modelItem => item.Price)</td>
+                    <td>@Html.DisplayFor(modelItem => item.Condition)</td>
+                    <td>@Html.DisplayFor(modelItem => item.CreatedAt)</td>
+                    <td>
+                        <a asp-action="Edit" asp-route-id="@item.ProductId">Επεξεργασία</a> |
+                        <a asp-action="Details" asp-route-id="@item.ProductId">Λεπτομέρειες</a> |
+                        <a asp-action="Delete" asp-route-id="@item.ProductId">Διαγραφή</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

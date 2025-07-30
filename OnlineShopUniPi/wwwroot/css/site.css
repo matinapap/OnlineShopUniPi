@@ -1,4 +1,4 @@
-﻿/* Βασικές ρυθμίσεις */
+﻿/* === Βασικές Ρυθμίσεις === */
 html, body {
     margin: 0;
     padding: 0;
@@ -29,7 +29,7 @@ ul {
     margin: 0;
 }
 
-/* ===== Layout Header ===== */
+/* === Header === */
 header {
     background-color: #1f1f1f;
     color: #fff;
@@ -37,6 +37,9 @@ header {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 100;
 }
 
 .logo {
@@ -48,6 +51,7 @@ header {
 .nav-links {
     display: flex;
     gap: 20px;
+    flex-direction: row;
 }
 
     .nav-links li a {
@@ -60,7 +64,7 @@ header {
             color: #d4af37;
         }
 
-.profile {
+.profile, .profile-link {
     display: flex;
     align-items: center;
     gap: 10px;
@@ -73,7 +77,16 @@ header {
         object-fit: cover;
     }
 
-/* ===== Hero Section ===== */
+    .profile-link .icon-link {
+        color: white;
+        font-size: 18px;
+    }
+
+        .profile-link .icon-link:hover {
+            color: gold;
+        }
+
+/* === Hero Section === */
 .hero-section {
     background: linear-gradient(to right, #333, #111);
     color: #fff;
@@ -104,7 +117,7 @@ header {
         background-color: #bfa133;
     }
 
-/* ===== Section Headings ===== */
+/* === Section === */
 .section {
     padding: 40px 20px;
     text-align: center;
@@ -115,7 +128,33 @@ header {
         margin-bottom: 30px;
     }
 
-/* ===== Προτεινόμενα Ρούχα ===== */
+/* === Κατηγορίες === */
+.categories {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 30px;
+}
+
+.category-tab {
+    padding: 10px 20px;
+    background-color: #eee;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+    .category-tab:hover {
+        background-color: #ddd;
+    }
+
+    .category-tab.active {
+        background-color: #1f1f1f;
+        color: white;
+    }
+
+/* === Προτεινόμενα Ρούχα === */
 .products {
     display: flex;
     justify-content: center;
@@ -145,238 +184,18 @@ header {
         margin-bottom: 10px;
     }
 
-/* ===== Διάφορα Ρούχα (Grid) ===== */
-.products-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    gap: 20px;
-    padding: 0 20px;
-}
-
-.grid-item {
-    background-color: white;
-    border-radius: 10px;
-    padding: 10px;
-    text-align: center;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.08);
-}
-
-    .grid-item img {
-        width: 100%;
-        height: 150px;
-        object-fit: cover;
-        border-radius: 6px;
+    .product-card h3 {
+        font-size: 16px;
+        margin: 10px 0;
     }
 
-.cart-btn {
-    margin-top: 8px;
-    background-color: #d4af37;
-    color: #1f1f1f;
-    padding: 8px 16px;
-    font-weight: bold;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-}
-
-    .cart-btn:hover {
-        background-color: #bfa133;
-    }
-
-/* ===== Checkout ===== */
-.checkout-container {
-    text-align: center;
-    margin-top: 30px;
-}
-
-.checkout-btn {
-    background-color: #d4af37;
-    color: #1f1f1f;
-    padding: 12px 24px;
-    font-weight: bold;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-}
-
-    .checkout-btn:hover {
-        background-color: #bfa133;
-    }
-
-/* ===== About Section ===== */
-.about-section {
-    padding: 40px 20px;
-    background-color: #eee;
-    text-align: center;
-}
-
-    .about-section h2 {
-        font-size: 26px;
-        margin-bottom: 20px;
-    }
-
-/* ===== Footer ===== */
-footer.footer {
-    background-color: #1f1f1f;
-    color: #bbb;
-    padding: 20px;
-    text-align: center;
-}
-
-    footer.footer a {
+    .product-card .price {
+        font-weight: bold;
         color: #d4af37;
-    }
-
-        footer.footer a:hover {
-            text-decoration: underline;
-        }
-
-/* ===== Responsive tweaks ===== */
-@media (max-width: 768px) {
-    .nav-links {
-        flex-direction: column;
-        gap: 10px;
-        align-items: flex-start;
-    }
-
-    .products, .products-grid {
-        justify-content: center;
-    }
-
-    .hero-section h1 {
-        font-size: 28px;
-    }
-}
-
-a {
-    text-decoration: none;
-    color: inherit;
-}
-
-ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-/* ===== Layout Header ===== */
-header {
-    background-color: #1f1f1f;
-    color: #fff;
-    padding: 20px 40px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.logo {
-    font-size: 28px;
-    font-weight: bold;
-    color: #d4af37;
-}
-
-.nav-links {
-    display: flex;
-    gap: 20px;
-}
-
-    .nav-links li a {
-        color: white;
-        font-weight: 500;
-        transition: color 0.3s ease;
-    }
-
-        .nav-links li a:hover {
-            color: #d4af37;
-        }
-
-.profile {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-    .profile img {
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        object-fit: cover;
-    }
-
-/* ===== Hero Section ===== */
-.hero-section {
-    background: linear-gradient(to right, #333, #111);
-    color: #fff;
-    padding: 60px 20px;
-    text-align: center;
-}
-
-    .hero-section h1 {
-        font-size: 36px;
-        margin-bottom: 10px;
-    }
-
-    .hero-section p {
         font-size: 18px;
-        margin-bottom: 20px;
     }
 
-.cta-button {
-    background-color: #d4af37;
-    color: #1f1f1f;
-    padding: 12px 24px;
-    font-weight: bold;
-    border-radius: 6px;
-    transition: background-color 0.3s ease;
-}
-
-    .cta-button:hover {
-        background-color: #bfa133;
-    }
-
-/* ===== Section Headings ===== */
-.section {
-    padding: 40px 20px;
-    text-align: center;
-}
-
-    .section h2 {
-        font-size: 28px;
-        margin-bottom: 30px;
-    }
-
-/* ===== Προτεινόμενα Ρούχα ===== */
-.products {
-    display: flex;
-    justify-content: center;
-    gap: 20px;
-    flex-wrap: wrap;
-}
-
-.product-card {
-    background-color: white;
-    border-radius: 10px;
-    padding: 20px;
-    width: 200px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    text-align: center;
-    transition: transform 0.2s ease;
-}
-
-    .product-card:hover {
-        transform: translateY(-5px);
-    }
-
-    .product-card img {
-        width: 100%;
-        height: 180px;
-        object-fit: cover;
-        border-radius: 6px;
-        margin-bottom: 10px;
-    }
-
-/* ===== Διάφορα Ρούχα (Grid) ===== */
+/* === Πλέγμα Προϊόντων === */
 .products-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
@@ -415,7 +234,7 @@ header {
         background-color: #bfa133;
     }
 
-/* ===== Checkout ===== */
+/* === Checkout === */
 .checkout-container {
     text-align: center;
     margin-top: 30px;
@@ -435,7 +254,7 @@ header {
         background-color: #bfa133;
     }
 
-/* ===== About Section ===== */
+/* === About Section === */
 .about-section {
     padding: 40px 20px;
     background-color: #eee;
@@ -447,8 +266,71 @@ header {
         margin-bottom: 20px;
     }
 
+/* === Footer === */
+footer {
+    background-color: #1f1f1f;
+    color: #fff;
+    padding: 20px 40px;
+    width: 100%;
+    box-sizing: border-box;
+    margin-top: auto;
+}
 
-/* Auth Container */
+.footer-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.footer-links {
+    display: flex;
+    gap: 20px;
+}
+
+    .footer-links a,
+    footer a {
+        color: #d4af37;
+        font-weight: 500;
+        transition: color 0.3s ease;
+    }
+
+        .footer-links a:hover,
+        footer a:hover {
+            color: #bfa133;
+            text-decoration: none;
+        }
+
+.social-icons {
+    display: flex;
+    gap: 15px;
+}
+
+    .social-icons a {
+        color: #bbb;
+        font-size: 20px;
+        transition: color 0.3s ease;
+    }
+
+        .social-icons a:hover {
+            color: #d4af37;
+        }
+
+.copyright {
+    color: #bbb;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    text-align: center;
+    margin-top: 20px;
+}
+
+/* === Auth === */
 .auth-container {
     display: flex;
     min-height: 70vh;
@@ -460,7 +342,6 @@ header {
     overflow: hidden;
 }
 
-/* Sidebar */
 .sidebar {
     flex: 1;
     background: linear-gradient(135deg, #1f1f1f, #3a3a3a);
@@ -476,7 +357,6 @@ header {
         font-size: 2.5rem;
         margin-bottom: 3rem;
         color: #d4af37;
-        text-decoration: none;
     }
 
 .auth-buttons {
@@ -506,7 +386,6 @@ header {
         border: 2px solid #d4af37;
     }
 
-/* Form Area */
 .form-area {
     flex: 1.5;
     padding: 3rem;
@@ -535,8 +414,6 @@ header {
     }
 }
 
-/* ===== Auth Container ===== */
-
 .auth-form h2 {
     font-size: 2rem;
     margin-bottom: 2rem;
@@ -555,13 +432,31 @@ header {
         color: #555;
     }
 
-    .form-group input {
+    .form-group input,
+    .form-group select {
         width: 100%;
         padding: 12px 15px;
         border: 1px solid #ddd;
         border-radius: 5px;
         font-size: 1rem;
+        background-color: white;
+        color: #333;
     }
+
+    .form-group select {
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg%20width%3D'10'%20height%3D'7'%20xmlns%3D'http%3A//www.w3.org/2000/svg'%3E%3Cpath%20d%3D'M0%200l5%207%205-7z'%20fill%3D'%23666'%3E%3C/path%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 12px center;
+        background-size: 12px;
+        cursor: pointer;
+    }
+
+        .form-group select:focus {
+            border-color: #d4af37;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.3);
+        }
 
 .submit-btn {
     width: 100%;
@@ -581,8 +476,29 @@ header {
         background-color: #d4af37;
     }
 
-/* Responsive */
+.hint {
+    display: block;
+    font-size: 12px;
+    color: #666;
+    margin-top: 4px;
+}
+
+/* === Responsive === */
 @media (max-width: 768px) {
+    .nav-links {
+        flex-direction: column;
+        gap: 10px;
+        align-items: flex-start;
+    }
+
+    .products, .products-grid {
+        justify-content: center;
+    }
+
+    .hero-section h1 {
+        font-size: 28px;
+    }
+
     .auth-container {
         flex-direction: column;
     }
@@ -603,102 +519,10 @@ header {
     .form-area {
         padding: 2rem;
     }
-}
 
-/* ===== Footer ===== */
-footer {
-    background-color: #1f1f1f;
-    color: #fff;
-    padding: 20px 40px;
-    width: 100%;
-    box-sizing: border-box;
-    margin-top: auto;
-}
-
-.footer-content {
-    max-width: 1200px;
-    margin: 0 auto;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 10px;
-    flex-wrap: wrap;
-}
-
-.copyright {
-    color: #bbb;
-    font-size: 14px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-footer a {
-    color: #d4af37;
-    font-weight: 500;
-    transition: color 0.3s ease;
-}
-
-    footer a:hover {
-        color: #bfa133;
-        text-decoration: none;
-    }
-
-/* ===== Custom Select Dropdowns ===== */
-.form-group select {
-    width: 100%;
-    padding: 12px 15px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    font-size: 1rem;
-    background-color: white;
-    color: #333;
-    appearance: none; /* Αφαιρεί το default browser styling */
-    background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D'10'%20height%3D'7'%20xmlns%3D'http%3A//www.w3.org/2000/svg'%3E%3Cpath%20d%3D'M0%200l5%207%205-7z'%20fill%3D'%23666'%3E%3C/path%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 12px center;
-    background-size: 12px;
-    cursor: pointer;
-}
-
-    .form-group select:focus {
-        border-color: #d4af37;
-        outline: none;
-        box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.3);
-    }
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-    .footer-content {
-        flex-direction: column;
-    }
-
+    .footer-content,
     .copyright {
         flex-direction: column;
         gap: 5px;
     }
 }
-
-.hint {
-    display: block;
-    font-size: 12px;
-    color: #666;
-    margin-top: 4px;
-}
-
-
-.profile-link {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-}
-
-    .profile-link .icon-link {
-        color: white;
-        font-size: 18px;
-        text-decoration: none;
-    }
-
-        .profile-link .icon-link:hover {
-            color: gold; 
-        }
