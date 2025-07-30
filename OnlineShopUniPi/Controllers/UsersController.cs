@@ -38,11 +38,22 @@ namespace OnlineShopUniPi.Controllers
             }
         }
 
-
         // GET: Users
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string? searchId, string? searchUsername)
         {
-            return View(await _context.Users.ToListAsync());
+            var users = _context.Users.AsQueryable();
+
+            if (!string.IsNullOrEmpty(searchId) && int.TryParse(searchId, out int id))
+            {
+                users = users.Where(u => u.UserId == id);
+            }
+
+            if (!string.IsNullOrEmpty(searchUsername))
+            {
+                users = users.Where(u => u.Username.Contains(searchUsername));
+            }
+
+            return View(await users.ToListAsync());
         }
 
         public IActionResult LoginSignup()

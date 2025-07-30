@@ -4,104 +4,64 @@
     ViewData["Title"] = "ClothingPage";
 }
 
-<h1>Index</h1>
+<h1 class="mb-4">Users</h1>
+
+<!-- Search Form -->
+<form asp-action="Index" method="get" class="row g-3 mb-4">
+    <div class="col-md-3">
+        <input type="text" name="searchId" class="form-control" placeholder="Search by ID" value="@Context.Request.Query["searchId"]" />
+    </div>
+    <div class="col-md-3">
+        <input type="text" name="searchUsername" class="form-control" placeholder="Search by Username" value="@Context.Request.Query["searchUsername"]" />
+    </div>
+    <div class="col-md-auto">
+        <button type="submit" class="btn btn-primary">Search</button>
+        <a asp-action="Index" class="btn btn-outline-secondary ms-2">Reset</a>
+    </div>
+</form>
 
 <p>
-    <a asp-action="Create">Create New</a>
+    <a asp-action="Create" class="btn btn-success">+ Create New User</a>
 </p>
-<table class="table">
-    <thead>
+
+<table class="table table-bordered table-striped table-hover">
+    <thead class="table-dark text-center">
         <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.UserId)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.FirstName)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.LastName)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Username)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Email)
-            </th>
-            @* <th> *@
-            @*     @Html.DisplayNameFor(model => model.PasswordHash) *@
-            @* </th> *@
-            <th>
-                @Html.DisplayNameFor(model => model.PhoneNumber)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Role)
-            </th>
-            @* <th> *@
-            @*     @Html.DisplayNameFor(model => model.ProfilePictureUrl) *@
-            @* </th> *@
-            <th>
-                @Html.DisplayNameFor(model => model.Address)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.City)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Country)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.RegistrationDate)
-            </th>
-            <th></th>
+            <th>@Html.DisplayNameFor(model => model.First().UserId)</th>
+            <th>@Html.DisplayNameFor(model => model.First().FirstName)</th>
+            <th>@Html.DisplayNameFor(model => model.First().LastName)</th>
+            <th>@Html.DisplayNameFor(model => model.First().Username)</th>
+            <th>@Html.DisplayNameFor(model => model.First().Email)</th>
+            <th>@Html.DisplayNameFor(model => model.First().PhoneNumber)</th>
+            <th>@Html.DisplayNameFor(model => model.First().Role)</th>
+            <th>@Html.DisplayNameFor(model => model.First().Address)</th>
+            <th>@Html.DisplayNameFor(model => model.First().City)</th>
+            <th>@Html.DisplayNameFor(model => model.First().Country)</th>
+            <th>@Html.DisplayNameFor(model => model.First().RegistrationDate)</th>
+            <th>Actions</th>
         </tr>
     </thead>
     <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.UserId)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.FirstName)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.LastName)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Username)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Email)
-            </td>
-            @* <td> *@
-            @*     @Html.DisplayFor(modelItem => item.PasswordHash) *@
-            @* </td> *@
-            <td>
-                @Html.DisplayFor(modelItem => item.PhoneNumber)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Role)
-            </td>
-            @* <td> *@
-            @*     @Html.DisplayFor(modelItem => item.ProfilePictureUrl) *@
-            @* </td> *@
-            <td>
-                @Html.DisplayFor(modelItem => item.Address)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.City)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Country)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.RegistrationDate)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.UserId">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.UserId">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.UserId">Delete</a>
-            </td>
-        </tr>
-}
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td class="text-center">@item.UserId</td>
+                <td>@item.FirstName</td>
+                <td>@item.LastName</td>
+                <td>@item.Username</td>
+                <td>@item.Email</td>
+                <td>@item.PhoneNumber</td>
+                <td>@item.Role</td>
+                <td>@item.Address</td>
+                <td>@item.City</td>
+                <td>@item.Country</td>
+                <td class="text-center">@item.RegistrationDate?.ToString("dd/MM/yyyy")</td>
+                <td class="text-center">
+                    <a asp-action="Edit" asp-route-id="@item.UserId" class="btn btn-sm btn-warning me-1">Edit</a>
+                    <a asp-action="Details" asp-route-id="@item.UserId" class="btn btn-sm btn-info me-1">Details</a>
+                    <a asp-action="Delete" asp-route-id="@item.UserId" class="btn btn-sm btn-danger">Delete</a>
+                </td>
+            </tr>
+        }
     </tbody>
 </table>
