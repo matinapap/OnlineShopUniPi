@@ -5,40 +5,55 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h1 class="text-center my-4">Τα Προϊόντα Μου</h1>
-
-<div class="text-end mb-3">
-    <a asp-action="Create" class="btn btn-success">➕ Προσθήκη Προϊόντος</a>
-</div>
-
-@if (Model == null || !Model.Any())
-{
-    <div class="alert alert-info">
-        Δεν έχετε προϊόντα προς εμφάνιση.
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="display-6 fw-bold text-dark">Τα Προϊόντα Μου</h1>
+        <a asp-action="Create" class="btn btn-success d-flex align-items-center">
+            <i class="bi bi-plus-circle me-2"></i> Προσθήκη Προϊόντος
+        </a>
     </div>
-}
-else
-{
-    <div class="row row-cols-1 row-cols-md-3 g-4">
-        @foreach (var item in Model)
-        {
-            <div class="col">
-                <div class="card h-100 shadow-sm">
-                    <img src="https://via.placeholder.com/400x250?text=@item.Title" class="card-img-top" alt="@item.Title" />
-                    <div class="card-body">
-                        <h5 class="card-title">@item.Title</h5>
-                        <p class="card-text">@item.Description</p>
-                        <p class="card-text"><strong>Κατηγορία:</strong> @item.Category</p>
-                        <p class="card-text"><strong>Τιμή:</strong> €@item.Price</p>
-                        <p class="card-text"><strong>Κατάσταση:</strong> @item.Condition</p>
-                    </div>
-                    <div class="card-footer d-flex justify-content-between">
-                        <a asp-action="Details" asp-route-id="@item.ProductId" class="btn btn-primary btn-sm">Λεπτομέρειες</a>
-                        <a asp-action="Delete" asp-route-id="@item.ProductId" class="btn btn-danger btn-sm">Διαγραφή</a>
+
+    @if (Model == null || !Model.Any())
+    {
+        <div class="alert alert-info text-center py-3">
+            <i class="bi bi-info-circle-fill me-2"></i> Δεν έχετε προϊόντα προς εμφάνιση.
+        </div>
+    }
+    else
+    {
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+            @foreach (var item in Model)
+            {
+                <div class="col">
+                    <div class="card h-100 border-0 shadow-sm hover-effect">
+                        <div class="position-relative">
+                            <img src="~/images/resources/no_image.png" class="card-img-top p-3 object-fit-contain bg-light" alt="@item.Title" style="height: 200px;">
+                            <div class="position-absolute top-0 end-0 m-2">
+                                <span class="badge bg-@(item.Condition == "Νέο" ? "success" : "warning") text-dark">
+                                    @item.Condition
+                                </span>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <h5 class="card-title fw-bold text-truncate">@item.Title</h5>
+                            <p class="card-text text-muted small" style="min-height: 40px;">@(item.Description.Length > 60 ? item.Description.Substring(0, 60) + "..." : item.Description)</p>
+
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="badge bg-secondary">@item.Category</span>
+                                <h5 class="text-primary mb-0">€@item.Price</h5>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-white border-top-0 d-flex justify-content-between pt-0">
+                            <a asp-action="Details" asp-route-id="@item.ProductId" class="btn btn-outline-primary btn-sm px-3">
+                                <i class="bi bi-eye-fill me-1"></i> Λεπτομέρειες
+                            </a>
+                            <a asp-action="Delete" asp-route-id="@item.ProductId" class="btn btn-outline-danger btn-sm px-3">
+                                <i class="bi bi-trash-fill me-1"></i> Διαγραφή
+                            </a>
+                        </div>
                     </div>
                 </div>
-            </div>
-        }
-    </div>
-}
-
+            }
+        </div>
+    }
+</div>
