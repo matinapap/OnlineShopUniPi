@@ -98,11 +98,8 @@ namespace OnlineShopUniPi.Controllers
 
             // Αν δεν υπάρχει UserId, επιστρέφουμε Unauthorized
             if (string.IsNullOrEmpty(userIdValue))
-            {
-                Console.WriteLine("1. DEN DOULEYEIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII!");
-
                 return Unauthorized();
-            }
+            
 
             // Βάζουμε το UserId στο ViewData για να το έχουμε στο View αν χρειαστεί
             ViewData["UserId"] = userIdValue;

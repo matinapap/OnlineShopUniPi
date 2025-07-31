@@ -20,13 +20,13 @@ public partial class Category
     [Column("parent_category_id")]
     public int? ParentCategoryId { get; set; }
 
-    [Column("description", TypeName = "text")]
-    public string? Description { get; set; }
-
     [InverseProperty("ParentCategory")]
     public virtual ICollection<Category> InverseParentCategory { get; set; } = new List<Category>();
 
     [ForeignKey("ParentCategoryId")]
     [InverseProperty("InverseParentCategory")]
     public virtual Category? ParentCategory { get; set; }
+
+    [InverseProperty("Category")]
+    public virtual ICollection<Product> Products { get; set; } = new List<Product>();
 }
