@@ -72,14 +72,16 @@ namespace OnlineShopUniPi.Controllers
         // GET: Products/Details/5
         public async Task<IActionResult> Details(int? id)
         {
-            if (id == null)
+            if (id == null || _context.Products == null)
             {
                 return NotFound();
             }
 
             var product = await _context.Products
-                .Include(p => p.User)
+                .Include(p => p.User)             
+                .Include(p => p.ProductImages)    
                 .FirstOrDefaultAsync(m => m.ProductId == id);
+
             if (product == null)
             {
                 return NotFound();
@@ -91,26 +93,62 @@ namespace OnlineShopUniPi.Controllers
         // GET: Products/Create
         public IActionResult Create()
         {
-            ViewData["UserId"] = new SelectList(_context.Users, "UserId", "UserId");
+            // Παίρνουμε το UserId από τα claims του χρήστη
+            var userIdValue = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            // Αν δεν υπάρχει UserId, επιστρέφουμε Unauthorized
+            if (string.IsNullOrEmpty(userIdValue))
+            {
+                Console.WriteLine("1. DEN DOULEYEIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII!");
+
+                return Unauthorized();
+            }
+
+            // Βάζουμε το UserId στο ViewData για να το έχουμε στο View αν χρειαστεί
+            ViewData["UserId"] = userIdValue;
+
             return View();
         }
 
+
         // POST: Products/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("ProductId,UserId,Title,Description,Category,Price,Condition,CreatedAt")] Product product)
+        public async Task<IActionResult> Create([Bind("ProductId,Title,Description,Category,Price,Condition")] Product product)
         {
-            if (ModelState.IsValid)
+            var userIdValue = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userIdValue) || !int.TryParse(userIdValue, out int userId))
             {
-                _context.Add(product);
+                return Unauthorized();
+            }
+
+            // Instead of loading the entire user, just set the foreign key
+            product.UserId = userId;
+            product.CreatedAt = DateTime.UtcNow;
+
+            // Clear the ModelState error for User since we're setting UserId directly
+            ModelState.Remove("User");
+
+            if (!ModelState.IsValid)
+            {
+                return View(product);
+            }
+
+            try
+            {
+                _context.Products.Add(product);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["UserId"] = new SelectList(_context.Users, "UserId", "UserId", product.UserId);
-            return View(product);
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to save product");
+                ModelState.AddModelError("", "Failed to save product. Please try again.");
+                return View(product);
+            }
         }
+
 
         // GET: Products/Edit/5
         public async Task<IActionResult> Edit(int? id)

@@ -1,8 +1,18 @@
 ﻿@model OnlineShopUniPi.Models.Product
 
+@using Microsoft.AspNetCore.Mvc.Rendering
+
 @{
     ViewData["Title"] = "Create";
     Layout = "/Views/Shared/_Layout.cshtml";
+    var categoryList = new List<SelectListItem>
+    {
+        new SelectListItem { Text = "👔 Men", Value = "Men" },
+        new SelectListItem { Text = "👗 Women", Value = "Women" },
+        new SelectListItem { Text = "👖 Men > Pants", Value = "Men > Pants" },
+        new SelectListItem { Text = "👖 Women > Pants", Value = "Women > Pants" },
+        new SelectListItem { Text = "👜 Accessories", Value = "Accessories" }
+    };
 }
 
 <h1>Create</h1>
@@ -10,46 +20,51 @@
 <h4>Product</h4>
 <hr />
 <div class="row">
-    <div class="col-md-4">
-        <form asp-action="Create">
+    <div class="col-md-6">
+        <form asp-action="Create" method="post">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group">
-                <label asp-for="UserId" class="control-label"></label>
-                <select asp-for="UserId" class ="form-control" asp-items="ViewBag.UserId"></select>
-            </div>
+
             <div class="form-group">
                 <label asp-for="Title" class="control-label"></label>
                 <input asp-for="Title" class="form-control" />
                 <span asp-validation-for="Title" class="text-danger"></span>
             </div>
+
             <div class="form-group">
                 <label asp-for="Description" class="control-label"></label>
-                <input asp-for="Description" class="form-control" />
+                <textarea asp-for="Description" class="form-control" rows="3"></textarea>
                 <span asp-validation-for="Description" class="text-danger"></span>
             </div>
+
             <div class="form-group">
                 <label asp-for="Category" class="control-label"></label>
-                <input asp-for="Category" class="form-control" />
+                <select asp-for="Category" class="form-control" asp-items="categoryList">
+                    <option value="">-- Επιλέξτε κατηγορία --</option>
+                </select>
                 <span asp-validation-for="Category" class="text-danger"></span>
             </div>
+
             <div class="form-group">
                 <label asp-for="Price" class="control-label"></label>
                 <input asp-for="Price" class="form-control" />
                 <span asp-validation-for="Price" class="text-danger"></span>
             </div>
+
             <div class="form-group">
                 <label asp-for="Condition" class="control-label"></label>
-                <input asp-for="Condition" class="form-control" />
+                <select asp-for="Condition" class="form-control">
+                    <option value="">-- Επιλέξτε κατάσταση --</option>
+                    <option value="Νέο">Νέο</option>
+                    <option value="Σχεδόν καινούργιο">Σχεδόν καινούργιο</option>
+                    <option value="Μεταχειρισμένο">Μεταχειρισμένο</option>
+                </select>
                 <span asp-validation-for="Condition" class="text-danger"></span>
             </div>
-            <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
+
+            <div class="form-group mt-3">
+                <input type="submit" value="Δημιουργία" class="btn btn-primary" />
+                <a asp-action="Index" class="btn btn-secondary ms-2">Πίσω</a>
             </div>
         </form>
     </div>
 </div>
-
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
-
