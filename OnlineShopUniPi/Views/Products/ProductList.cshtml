@@ -1,65 +1,44 @@
 ﻿@model IEnumerable<OnlineShopUniPi.Models.Product>
+
 @{
-    ViewData["Title"] = "Τα Προιόντα μου";
+    ViewData["Title"] = "Τα Προϊόντα Μου";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h1>Τα Προϊόντα Μου</h1>
+<h1 class="text-center my-4">Τα Προϊόντα Μου</h1>
 
-@if (Model == null)
-{
-    <div class="alert alert-danger">
-        <strong>Σφάλμα:</strong> Δεν ήταν δυνατή η φόρτωση των προϊόντων.
-    </div>
-    <p>
-        <a asp-action="Create" class="btn btn-success">Δημιουργία Νέου Προϊόντος</a>
-    </p>
-}
-else if (!Model.Any())
+<div class="text-end mb-3">
+    <a asp-action="Create" class="btn btn-success">➕ Προσθήκη Προϊόντος</a>
+</div>
+
+@if (Model == null || !Model.Any())
 {
     <div class="alert alert-info">
         Δεν έχετε προϊόντα προς εμφάνιση.
     </div>
-    <p>
-        <a asp-action="Create" class="btn btn-success">Δημιουργία Νέου Προϊόντος</a>
-    </p>
 }
 else
 {
-    <p>
-        <a asp-action="Create" class="btn btn-success">Δημιουργία Νέου Προϊόντος</a>
-    </p>
-
-    <table class="table">
-        <thead>
-            <tr>
-                <th>@Html.DisplayNameFor(model => model.Title)</th>
-                <th>@Html.DisplayNameFor(model => model.Description)</th>
-                <th>@Html.DisplayNameFor(model => model.Category)</th>
-                <th>@Html.DisplayNameFor(model => model.Price)</th>
-                <th>@Html.DisplayNameFor(model => model.Condition)</th>
-                <th>@Html.DisplayNameFor(model => model.CreatedAt)</th>
-                <th>Χρήστης</th> <!-- Changed from "User" -->
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var item in Model)
-            {
-                <tr>
-                    <td>@Html.DisplayFor(modelItem => item.Title)</td>
-                    <td>@Html.DisplayFor(modelItem => item.Description)</td>
-                    <td>@Html.DisplayFor(modelItem => item.Category)</td>
-                    <td>@Html.DisplayFor(modelItem => item.Price)</td>
-                    <td>@Html.DisplayFor(modelItem => item.Condition)</td>
-                    <td>@Html.DisplayFor(modelItem => item.CreatedAt)</td>
-                    <td>
-                        <a asp-action="Edit" asp-route-id="@item.ProductId">Επεξεργασία</a> |
-                        <a asp-action="Details" asp-route-id="@item.ProductId">Λεπτομέρειες</a> |
-                        <a asp-action="Delete" asp-route-id="@item.ProductId">Διαγραφή</a>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+        @foreach (var item in Model)
+        {
+            <div class="col">
+                <div class="card h-100 shadow-sm">
+                    <img src="https://via.placeholder.com/400x250?text=@item.Title" class="card-img-top" alt="@item.Title" />
+                    <div class="card-body">
+                        <h5 class="card-title">@item.Title</h5>
+                        <p class="card-text">@item.Description</p>
+                        <p class="card-text"><strong>Κατηγορία:</strong> @item.Category</p>
+                        <p class="card-text"><strong>Τιμή:</strong> €@item.Price</p>
+                        <p class="card-text"><strong>Κατάσταση:</strong> @item.Condition</p>
+                    </div>
+                    <div class="card-footer d-flex justify-content-between">
+                        <a asp-action="Details" asp-route-id="@item.ProductId" class="btn btn-primary btn-sm">Λεπτομέρειες</a>
+                        <a asp-action="Delete" asp-route-id="@item.ProductId" class="btn btn-danger btn-sm">Διαγραφή</a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
 }
+

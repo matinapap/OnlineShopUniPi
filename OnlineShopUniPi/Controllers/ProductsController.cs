@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -19,11 +20,6 @@ namespace OnlineShopUniPi.Controllers
         {
             _context = context;
             _logger = logger;
-        }
-
-        public IActionResult ProductList()
-        {
-            return View(); 
         }
 
         // GET: Products
@@ -47,12 +43,30 @@ namespace OnlineShopUniPi.Controllers
         [Authorize]
         public async Task<IActionResult> GetProducts()
         {
-            var products = await _context.Products
+            try
+            {
+                var userIdValue = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (string.IsNullOrEmpty(userIdValue))
+                    return Unauthorized();
+
+                if (!int.TryParse(userIdValue, out int userId))
+                    return Unauthorized();
+
+                var products = await _context.Products
                     .Include(p => p.User)
+                    .Where(p => p.UserId == userId)
                     .ToListAsync();
 
-            return View(products ?? new List<Product>());
+                return View("ProductList", products);
+            }
+            catch (Exception ex)
+            {
+                // Κάνε logging εδώ ή debugging για να δεις τι σφάλμα προέκυψε
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
         }
+
+
 
 
         // GET: Products/Details/5

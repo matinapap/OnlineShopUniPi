@@ -274,21 +274,30 @@ footer {
     width: 100%;
     box-sizing: border-box;
     margin-top: auto;
+    display: flex;
+    flex-direction: column; /* Αλλαγή σε column για καλύτερο κεντράρισμα */
+    justify-content: center;
+    align-items: center;
+    min-height: 100px; /* Προσθήκη ελάχιστου ύψους */
 }
 
 .footer-content {
     max-width: 1200px;
-    margin: 0 auto;
+    width: 100%;
     display: flex;
+    flex-direction: column; /* Αλλαγή σε column */
     justify-content: center;
     align-items: center;
-    gap: 10px;
+    gap: 15px;
     flex-wrap: wrap;
+    text-align: center; /* Κεντράρισμα κειμένου */
 }
 
 .footer-links {
     display: flex;
     gap: 20px;
+    justify-content: center; /* Κεντράρισμα links */
+    flex-wrap: wrap;
 }
 
     .footer-links a,
@@ -307,6 +316,7 @@ footer {
 .social-icons {
     display: flex;
     gap: 15px;
+    justify-content: center; /* Κεντράρισμα εικονιδίων */
 }
 
     .social-icons a {
@@ -323,13 +333,14 @@ footer {
     color: #bbb;
     font-size: 14px;
     display: flex;
+    justify-content: center; /* Κεντράρισμα copyright */
     align-items: center;
     gap: 10px;
     width: 100%;
     text-align: center;
     margin-top: 20px;
+    flex-wrap: wrap;
 }
-
 /* === Auth === */
 .auth-container {
     display: flex;
