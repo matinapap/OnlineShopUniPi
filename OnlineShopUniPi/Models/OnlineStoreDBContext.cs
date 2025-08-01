@@ -15,8 +15,6 @@ public partial class OnlineStoreDBContext : DbContext
     {
     }
 
-    public virtual DbSet<Category> Categories { get; set; }
-
     public virtual DbSet<Favorite> Favorites { get; set; }
 
     public virtual DbSet<Order> Orders { get; set; }
@@ -39,12 +37,6 @@ public partial class OnlineStoreDBContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<Category>(entity =>
-        {
-            entity.HasKey(e => e.CategoryId).HasName("PK__Categori__D54EE9B4D9D4B8C8");
-
-            entity.HasOne(d => d.ParentCategory).WithMany(p => p.InverseParentCategory).HasConstraintName("FK__Categorie__paren__5535A963");
-        });
 
         modelBuilder.Entity<Favorite>(entity =>
         {

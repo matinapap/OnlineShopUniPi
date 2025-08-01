@@ -15,7 +15,11 @@
                 <dt class="col-sm-4">Περιγραφή</dt>
                 <dd class="col-sm-8">@Model.Description</dd>
 
+                <dt class="col-sm-4">Φύλο</dt>
+                <dd class="col-sm-8">@Model.Gender</dd>
+
                 <dt class="col-sm-4">Κατηγορία</dt>
+                <dd class="col-sm-8">@Model.Category</dd>
 
                 <dt class="col-sm-4">Τιμή</dt>
                 <dd class="col-sm-8">€@Model.Price</dd>
@@ -24,7 +28,9 @@
                 <dd class="col-sm-8">@Model.Condition</dd>
 
                 <dt class="col-sm-4">Ημ/νία Δημιουργίας</dt>
-                <dd class="col-sm-8">@Model.CreatedAt</dd>
+                <dd class="col-sm-8">
+                    @Model.CreatedAt?.ToString("dd/MM/yyyy HH:mm") ?? "—"
+                </dd>
 
                 <dt class="col-sm-4">Χρήστης</dt>
                 <dd class="col-sm-8">@Model.User?.Email</dd>
@@ -44,7 +50,7 @@
             }
             else
             {
-                <p class="text-muted fst-italic">No images available.</p>
+                <p class="text-muted fst-italic">Δεν υπάρχουν εικόνες.</p>
             }
         </div>
     </div>

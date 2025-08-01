@@ -1,27 +1,22 @@
 ﻿@model OnlineShopUniPi.Models.Product
-
 @using Microsoft.AspNetCore.Mvc.Rendering
 
 @{
     ViewData["Title"] = "Create";
     Layout = "/Views/Shared/_Layout.cshtml";
-    var categoryList = new List<SelectListItem>
+
+    var gendercategoryList = new List<SelectListItem>
     {
-        new SelectListItem { Text = "👔 Men", Value = "Men" },
-        new SelectListItem { Text = "👗 Women", Value = "Women" },
-        new SelectListItem { Text = "👖 Men > Pants", Value = "Men > Pants" },
-        new SelectListItem { Text = "👖 Women > Pants", Value = "Women > Pants" },
-        new SelectListItem { Text = "👜 Accessories", Value = "Accessories" }
+        new SelectListItem { Text = "Male", Value = "Men" },
+        new SelectListItem { Text = "Female", Value = "Women" }
     };
 }
 
-<h1>Create</h1>
+<h1>Create Product</h1>
 
-<h4>Product</h4>
-<hr />
 <div class="row">
     <div class="col-md-6">
-        <form asp-action="Create" method="post">
+        <form asp-action="Create" method="post" enctype="multipart/form-data">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
             <div class="form-group">
@@ -36,9 +31,23 @@
                 <span asp-validation-for="Description" class="text-danger"></span>
             </div>
 
+            <!-- Gender Dropdown -->
+            <div class="form-group">
+                <label asp-for="Gender" class="control-label"></label>
+                <select asp-for="Gender" class="form-control" id="GenderSelect">
+                    <option value="">-- Επιλέξτε φύλο --</option>
+                    @foreach (var g in gendercategoryList)
+                    {
+                        <option value="@g.Value">@g.Text</option>
+                    }
+                </select>
+                <span asp-validation-for="Gender" class="text-danger"></span>
+            </div>
+
+            <!-- Category Dropdown (dependent on gender) -->
             <div class="form-group">
                 <label asp-for="Category" class="control-label"></label>
-                <select asp-for="Category" class="form-control" asp-items="categoryList">
+                <select asp-for="Category" class="form-control" id="CategorySelect" disabled>
                     <option value="">-- Επιλέξτε κατηγορία --</option>
                 </select>
                 <span asp-validation-for="Category" class="text-danger"></span>
@@ -54,12 +63,19 @@
                 <label asp-for="Condition" class="control-label"></label>
                 <select asp-for="Condition" class="form-control">
                     <option value="">-- Επιλέξτε κατάσταση --</option>
-                    <option value="Νέο">Νέο</option>
-                    <option value="Σχεδόν καινούργιο">Σχεδόν καινούργιο</option>
-                    <option value="Μεταχειρισμένο">Μεταχειρισμένο</option>
+                    <option value="New">New</option>
+                    <option value="Almost new">Almost new</option>
+                    <option value="Used">Used</option>
                 </select>
                 <span asp-validation-for="Condition" class="text-danger"></span>
             </div>
+
+            <div class="form-group">
+                <label for="images">Εικόνες προϊόντος</label>
+                <input type="file" name="images" id="images" class="form-control" multiple />
+                <small class="form-text text-muted">Μπορείτε να επιλέξετε πολλές εικόνες.</small>
+            </div>
+
 
             <div class="form-group mt-3">
                 <input type="submit" value="Δημιουργία" class="btn btn-primary" />
@@ -68,3 +84,58 @@
         </form>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        const maleClothes = [
+            "Shirts",
+            "T-shirts / Tops",
+            "Sweaters and Hoodies",
+            "Jackets / Coats",
+            "Jeans and Pants",
+            "Other"
+        ];
+
+        const femaleClothes = [
+            "Dresses and bodysuits",
+            "T-shirts / Tops",
+            "Jackets / Coats",
+            "Beachwear / Swimwear",
+            "Shirts and blouses",
+            "Pants / Trousers",
+            "Sweaters / Jumpers",
+            "Jeans",
+            "Hoodies / Sweatshirts",
+            "Skirts and shorts",
+            "Other"
+        ];
+
+        const genderSelect = document.getElementById("GenderSelect");
+        const categorySelect = document.getElementById("CategorySelect");
+
+        genderSelect.addEventListener("change", function () {
+            const gender = this.value;
+            categorySelect.innerHTML = '<option value="">-- Επιλέξτε κατηγορία --</option>';
+
+            let clothesList = [];
+
+            if (gender === "Men") {
+                clothesList = maleClothes;
+            } else if (gender === "Women") {
+                clothesList = femaleClothes;
+            }
+
+            if (clothesList.length > 0) {
+                clothesList.forEach(cat => {
+                    const option = document.createElement("option");
+                    option.value = cat;
+                    option.text = cat;
+                    categorySelect.appendChild(option);
+                });
+                categorySelect.disabled = false;
+            } else {
+                categorySelect.disabled = true;
+            }
+        });
+    </script>
+}

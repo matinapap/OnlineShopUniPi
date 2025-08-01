@@ -4,6 +4,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -15,11 +16,15 @@ namespace OnlineShopUniPi.Controllers
     {
         private readonly OnlineStoreDBContext _context;
         private readonly ILogger<ProductsController> _logger;
+        private readonly IWebHostEnvironment _webHostEnvironment;
+        private readonly IWebHostEnvironment _env;
 
-        public ProductsController(OnlineStoreDBContext context, ILogger<ProductsController> logger)
+        public ProductsController(IWebHostEnvironment env, OnlineStoreDBContext context, ILogger<ProductsController> logger, IWebHostEnvironment webHostEnvironment)
         {
+            _env = env;
             _context = context;
             _logger = logger;
+            _webHostEnvironment = webHostEnvironment;
         }
 
         // GET: Products
@@ -54,6 +59,7 @@ namespace OnlineShopUniPi.Controllers
 
                 var products = await _context.Products
                     .Include(p => p.User)
+                    .Include(p => p.ProductImages)
                     .Where(p => p.UserId == userId)
                     .ToListAsync();
 
@@ -65,9 +71,6 @@ namespace OnlineShopUniPi.Controllers
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
-
-
-
 
         // GET: Products/Details/5
         public async Task<IActionResult> Details(int? id)
@@ -111,7 +114,7 @@ namespace OnlineShopUniPi.Controllers
         // POST: Products/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("ProductId,Title,Description,Category,Price,Condition")] Product product)
+        public async Task<IActionResult> Create([Bind("ProductId,Title,Description,Gender,Category,Price,Condition")] Product product, List<IFormFile> images)
         {
             var userIdValue = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
@@ -120,11 +123,9 @@ namespace OnlineShopUniPi.Controllers
                 return Unauthorized();
             }
 
-            // Instead of loading the entire user, just set the foreign key
             product.UserId = userId;
             product.CreatedAt = DateTime.UtcNow;
 
-            // Clear the ModelState error for User since we're setting UserId directly
             ModelState.Remove("User");
 
             if (!ModelState.IsValid)
@@ -134,17 +135,58 @@ namespace OnlineShopUniPi.Controllers
 
             try
             {
+                // Προσθήκη προϊόντος στη βάση
                 _context.Products.Add(product);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                await _context.SaveChangesAsync(); // Χρειαζόμαστε το ProductId
+
+                // Ανέβασμα φωτογραφιών
+                if (images != null && images.Count > 0)
+                {
+                    var uploadPath = Path.Combine(_webHostEnvironment.WebRootPath, "images", "products");
+
+                    if (!Directory.Exists(uploadPath))
+                        Directory.CreateDirectory(uploadPath);
+
+                    for (int i = 0; i < images.Count; i++)
+                    {
+                        var formFile = images[i];
+
+                        if (formFile.Length > 0)
+                        {
+                            var fileName = Guid.NewGuid() + Path.GetExtension(formFile.FileName);
+                            var filePath = Path.Combine(uploadPath, fileName);
+
+                            using (var stream = new FileStream(filePath, FileMode.Create))
+                            {
+                                await formFile.CopyToAsync(stream);
+                            }
+
+                            var imageUrl = "/images/products/" + fileName;
+
+                            var productImage = new ProductImage
+                            {
+                                ProductId = product.ProductId,
+                                ImageUrl = imageUrl,
+                                IsMainImage = (i == 0) // Η πρώτη εικόνα ως κύρια
+                            };
+
+                            _context.ProductImages.Add(productImage);
+                        }
+                    }
+
+                    await _context.SaveChangesAsync();
+                }
+
+                return RedirectToAction("GetProducts");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to save product");
-                ModelState.AddModelError("", "Failed to save product. Please try again.");
+                ModelState.AddModelError("", "Απέτυχε η αποθήκευση του προϊόντος. Δοκιμάστε ξανά.");
                 return View(product);
             }
         }
+
 
 
         // GET: Products/Edit/5
@@ -169,36 +211,115 @@ namespace OnlineShopUniPi.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("ProductId,UserId,Title,Description,Category,Price,Condition,CreatedAt")] Product product)
+        public async Task<IActionResult> Edit(int id, [Bind("ProductId,Title,Description,Category,Price,Condition")] Product product, List<IFormFile> ProductImages)
         {
             if (id != product.ProductId)
             {
                 return NotFound();
             }
 
-            if (ModelState.IsValid)
+            // Παίρνουμε το UserId από το claim του τρέχοντος χρήστη
+            var userIdValue = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdValue) || !int.TryParse(userIdValue, out int userId))
             {
-                try
-                {
-                    _context.Update(product);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!ProductExists(product.ProductId))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                return RedirectToAction(nameof(Index));
+                return Unauthorized();
             }
-            ViewData["UserId"] = new SelectList(_context.Users, "UserId", "UserId", product.UserId);
-            return View(product);
+
+            // Θέτουμε το UserId και CreatedAt
+            product.UserId = userId;
+            product.CreatedAt = DateTime.UtcNow;
+
+            // Αφαιρούμε το validation για το User (αν υπάρχει)
+            ModelState.Remove("User");
+
+            if (!ModelState.IsValid)
+            {
+                return View(product);
+            }
+
+            try
+            {
+                var existingProduct = await _context.Products
+                    .Include(p => p.ProductImages)
+                    .FirstOrDefaultAsync(p => p.ProductId == id);
+
+                if (existingProduct == null)
+                {
+                    return NotFound();
+                }
+
+                // Διαγραφή παλιών εικόνων (από βάση και αρχεία)
+                if (existingProduct.ProductImages != null)
+                {
+                    foreach (var oldImage in existingProduct.ProductImages)
+                    {
+                        var oldImagePath = Path.Combine(_env.WebRootPath, oldImage.ImageUrl.TrimStart('/'));
+                        if (System.IO.File.Exists(oldImagePath))
+                        {
+                            System.IO.File.Delete(oldImagePath);
+                        }
+                    }
+                    _context.ProductImages.RemoveRange(existingProduct.ProductImages);
+                }
+
+                // Αποθήκευση νέων εικόνων
+                var newImages = new List<ProductImage>();
+                if (ProductImages != null && ProductImages.Count > 0)
+                {
+                    int index = 0;
+                    foreach (var formFile in ProductImages)
+                    {
+                        if (formFile.Length > 0)
+                        {
+                            var fileName = $"{Guid.NewGuid()}{Path.GetExtension(formFile.FileName)}";
+                            var filePath = Path.Combine(_env.WebRootPath, "images", "products", fileName);
+
+                            Directory.CreateDirectory(Path.GetDirectoryName(filePath));
+
+                            using (var stream = new FileStream(filePath, FileMode.Create))
+                            {
+                                await formFile.CopyToAsync(stream);
+                            }
+
+                            newImages.Add(new ProductImage
+                            {
+                                ImageUrl = $"/images/products/{fileName}",
+                                IsMainImage = index == 0
+                            });
+                            index++;
+                        }
+                    }
+                }
+
+                // Ενημερώνουμε τις ιδιότητες
+                existingProduct.UserId = product.UserId;
+                existingProduct.Title = product.Title;
+                existingProduct.Description = product.Description;
+                existingProduct.Category = product.Category;
+                existingProduct.Price = product.Price;
+                existingProduct.Condition = product.Condition;
+                existingProduct.CreatedAt = product.CreatedAt;
+
+                existingProduct.ProductImages = newImages;
+
+                _context.Update(existingProduct);
+                await _context.SaveChangesAsync();
+
+                return RedirectToAction("GetProducts");
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!ProductExists(product.ProductId))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
         }
+
 
         // GET: Products/Delete/5
         public async Task<IActionResult> Delete(int? id)
@@ -224,15 +345,38 @@ namespace OnlineShopUniPi.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var product = await _context.Products.FindAsync(id);
+            // Φόρτωσε το προϊόν μαζί με τις εικόνες του
+            var product = await _context.Products
+                .Include(p => p.ProductImages)
+                .FirstOrDefaultAsync(p => p.ProductId == id);
+
             if (product != null)
             {
+                // Διαγραφή των εικόνων από το δίσκο
+                if (product.ProductImages != null)
+                {
+                    foreach (var image in product.ProductImages)
+                    {
+                        var imagePath = Path.Combine(_env.WebRootPath, image.ImageUrl.TrimStart('/'));
+                        if (System.IO.File.Exists(imagePath))
+                        {
+                            System.IO.File.Delete(imagePath);
+                        }
+                    }
+
+                    // Διαγραφή εγγραφών εικόνων από τη βάση
+                    _context.ProductImages.RemoveRange(product.ProductImages);
+                }
+
+                // Διαγραφή του προϊόντος
                 _context.Products.Remove(product);
+
+                await _context.SaveChangesAsync();
             }
 
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+            return RedirectToAction("GetProducts");
         }
+
 
         private bool ProductExists(int id)
         {

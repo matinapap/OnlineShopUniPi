@@ -23,12 +23,15 @@ public partial class Product
     [Column("description", TypeName = "text")]
     public string? Description { get; set; }
 
-    [Column("category_id")]
-    public int CategoryId { get; set; }
+    [Column("gender")]
+    [StringLength(20)]
+    [Unicode(false)]
+    public string? Gender { get; set; }
 
-    [ForeignKey("CategoryId")]
-    [InverseProperty("Products")]
-    public virtual Category Category { get; set; } = null!;
+    [Column("category")]
+    [StringLength(100)]
+    [Unicode(false)]
+    public string? Category { get; set; }
 
     [Column("price", TypeName = "decimal(10, 2)")]
     public decimal Price { get; set; }
