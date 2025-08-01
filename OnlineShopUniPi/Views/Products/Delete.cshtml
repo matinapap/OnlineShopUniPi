@@ -1,63 +1,53 @@
 ﻿@model OnlineShopUniPi.Models.Product
 
 @{
-    ViewData["Title"] = "Delete";
+    ViewData["Title"] = "Διαγραφή Προϊόντος";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h1>Delete</h1>
+<div class="container mt-5">
+    <div class="card shadow rounded-4">
+        <div class="card-header bg-danger text-white text-center">
+            <h3>Είστε σίγουρος ότι θέλετε να διαγράψετε το προϊόν;</h3>
+        </div>
 
-<h3>Are you sure you want to delete this?</h3>
-<div>
-    <h4>Product</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Title)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Title)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Description)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Description)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Category)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Category)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Price)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Price)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Condition)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Condition)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.CreatedAt)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.CreatedAt)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.User)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.User.UserId)
-        </dd>
-    </dl>
-    
-    <form asp-action="Delete">
-        <input type="hidden" asp-for="ProductId" />
-        <input type="submit" value="Delete" class="btn btn-danger" />
-    </form>
+        <div class="card-body">
+            <h4 class="mb-4 text-center text-muted">Προεπισκόπηση Προϊόντος</h4>
+
+            <dl class="row">
+                <dt class="col-sm-4 fw-bold">Τίτλος</dt>
+                <dd class="col-sm-8">@Model.Title</dd>
+
+                <dt class="col-sm-4 fw-bold">Περιγραφή</dt>
+                <dd class="col-sm-8">@Model.Description</dd>
+
+                <dt class="col-sm-4 fw-bold">Κατηγορία</dt>
+                <dd class="col-sm-8">@Model.Category</dd>
+
+                <dt class="col-sm-4 fw-bold">Τιμή</dt>
+                <dd class="col-sm-8">@Model.Price.ToString("C")</dd>
+
+                <dt class="col-sm-4 fw-bold">Κατάσταση</dt>
+                <dd class="col-sm-8">@Model.Condition</dd>
+
+                <dt class="col-sm-4 fw-bold">Ημερομηνία Δημιουργίας</dt>
+                <dd class="col-sm-8">@Model.CreatedAt</dd>
+
+                <dt class="col-sm-4 fw-bold">Χρήστης</dt>
+                <dd class="col-sm-8">ID: @Model.User?.UserId</dd>
+            </dl>
+
+            <form asp-action="Delete" class="text-center mt-4">
+                <input type="hidden" asp-for="ProductId" />
+
+                <button type="submit" class="btn btn-danger px-4 me-2">
+                    <i class="bi bi-trash-fill me-1"></i> Διαγραφή
+                </button>
+
+                <a asp-action="GetProducts" class="btn btn-secondary px-4">
+                    <i class="bi bi-arrow-left-circle me-1"></i> Πίσω
+                </a>
+            </form>
+        </div>
+    </div>
 </div>

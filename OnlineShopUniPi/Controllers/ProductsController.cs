@@ -121,7 +121,7 @@ namespace OnlineShopUniPi.Controllers
         // POST: Products/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("ProductId,Title,Description,Gender,Category,Price,Condition")] Product product, IFormFile MainImage, List<IFormFile> AdditionalImages)
+        public async Task<IActionResult> Create([Bind("ProductId,Title,Description,Gender,Category,Price,Condition")] Product product, IFormFile ?MainImage, List<IFormFile> ?AdditionalImages)
         {
             var userIdValue = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
