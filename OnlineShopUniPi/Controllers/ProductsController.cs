@@ -121,7 +121,7 @@ namespace OnlineShopUniPi.Controllers
         // POST: Products/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("ProductId,Title,Description,Gender,Category,Price,Condition")] Product product, List<IFormFile> images)
+        public async Task<IActionResult> Create([Bind("ProductId,Title,Description,Gender,Category,Price,Condition")] Product product, IFormFile MainImage, List<IFormFile> AdditionalImages)
         {
             var userIdValue = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
@@ -142,22 +142,39 @@ namespace OnlineShopUniPi.Controllers
 
             try
             {
-                // Προσθήκη προϊόντος στη βάση
                 _context.Products.Add(product);
-                await _context.SaveChangesAsync(); // Χρειαζόμαστε το ProductId
+                await _context.SaveChangesAsync();
 
-                // Ανέβασμα φωτογραφιών
-                if (images != null && images.Count > 0)
+                var uploadPath = Path.Combine(_webHostEnvironment.WebRootPath, "images", "products");
+                if (!Directory.Exists(uploadPath))
+                    Directory.CreateDirectory(uploadPath);
+
+                // ΚΥΡΙΑ ΕΙΚΟΝΑ
+                if (MainImage != null && MainImage.Length > 0)
                 {
-                    var uploadPath = Path.Combine(_webHostEnvironment.WebRootPath, "images", "products");
+                    var fileName = Guid.NewGuid() + Path.GetExtension(MainImage.FileName);
+                    var filePath = Path.Combine(uploadPath, fileName);
 
-                    if (!Directory.Exists(uploadPath))
-                        Directory.CreateDirectory(uploadPath);
-
-                    for (int i = 0; i < images.Count; i++)
+                    using (var stream = new FileStream(filePath, FileMode.Create))
                     {
-                        var formFile = images[i];
+                        await MainImage.CopyToAsync(stream);
+                    }
 
+                    var mainProductImage = new ProductImage
+                    {
+                        ProductId = product.ProductId,
+                        ImageUrl = "/images/products/" + fileName,
+                        IsMainImage = true
+                    };
+
+                    _context.ProductImages.Add(mainProductImage);
+                }
+
+                // ΔΕΥΤΕΡΕΥΟΥΣΕΣ ΕΙΚΟΝΕΣ
+                if (AdditionalImages != null && AdditionalImages.Count > 0)
+                {
+                    foreach (var formFile in AdditionalImages)
+                    {
                         if (formFile.Length > 0)
                         {
                             var fileName = Guid.NewGuid() + Path.GetExtension(formFile.FileName);
@@ -168,22 +185,19 @@ namespace OnlineShopUniPi.Controllers
                                 await formFile.CopyToAsync(stream);
                             }
 
-                            var imageUrl = "/images/products/" + fileName;
-
                             var productImage = new ProductImage
                             {
                                 ProductId = product.ProductId,
-                                ImageUrl = imageUrl,
-                                IsMainImage = (i == 0) // Η πρώτη εικόνα ως κύρια
+                                ImageUrl = "/images/products/" + fileName,
+                                IsMainImage = false
                             };
 
                             _context.ProductImages.Add(productImage);
                         }
                     }
-
-                    await _context.SaveChangesAsync();
                 }
 
+                await _context.SaveChangesAsync();
                 return RedirectToAction("GetProducts");
             }
             catch (Exception ex)
@@ -193,6 +207,7 @@ namespace OnlineShopUniPi.Controllers
                 return View(product);
             }
         }
+
 
 
 
@@ -218,114 +233,128 @@ namespace OnlineShopUniPi.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("ProductId,Title,Description,Category,Price,Condition")] Product product, List<IFormFile> ProductImages)
+        public async Task<IActionResult> Edit(
+     int id,
+     [Bind("ProductId,Title,Description,Gender,Category,Price,Condition")] Product product,
+     IFormFile ?MainImage,
+     List<IFormFile> ?AdditionalImages)
         {
             if (id != product.ProductId)
             {
                 return NotFound();
             }
 
-            // Παίρνουμε το UserId από το claim του τρέχοντος χρήστη
             var userIdValue = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userIdValue) || !int.TryParse(userIdValue, out int userId))
             {
                 return Unauthorized();
             }
 
-            // Θέτουμε το UserId και CreatedAt
-            product.UserId = userId;
-            product.CreatedAt = DateTime.UtcNow;
-
-            // Αφαιρούμε το validation για το User (αν υπάρχει)
             ModelState.Remove("User");
 
             if (!ModelState.IsValid)
             {
-                return View(product);
+                var fullProduct = await _context.Products
+                    .Include(p => p.ProductImages)
+                    .FirstOrDefaultAsync(p => p.ProductId == product.ProductId);
+
+                return View(fullProduct);
             }
 
-            try
+            var existingProduct = await _context.Products
+                .Include(p => p.ProductImages)
+                .FirstOrDefaultAsync(p => p.ProductId == id);
+
+            if (existingProduct == null)
             {
-                var existingProduct = await _context.Products
-                    .Include(p => p.ProductImages)
-                    .FirstOrDefaultAsync(p => p.ProductId == id);
+                return NotFound();
+            }
 
-                if (existingProduct == null)
-                {
-                    return NotFound();
-                }
+            // Ενημέρωση ιδιοτήτων
+            existingProduct.Title = product.Title;
+            existingProduct.Description = product.Description;
+            existingProduct.Gender = product.Gender;
+            existingProduct.Category = product.Category;
+            existingProduct.Price = product.Price;
+            existingProduct.Condition = product.Condition;
+            existingProduct.UserId = userId;
+            existingProduct.CreatedAt = DateTime.UtcNow;
 
-                // Διαγραφή παλιών εικόνων (από βάση και αρχεία)
-                if (existingProduct.ProductImages != null)
+            bool hasNewImages =
+                (MainImage != null && MainImage.Length > 0) ||
+                (AdditionalImages != null && AdditionalImages.Any(f => f.Length > 0));
+
+            if (hasNewImages)
+            {
+                // Διαγραφή παλιών εικόνων
+                foreach (var oldImage in existingProduct.ProductImages)
                 {
-                    foreach (var oldImage in existingProduct.ProductImages)
+                    var oldImagePath = Path.Combine(_env.WebRootPath, oldImage.ImageUrl.TrimStart('/'));
+                    if (System.IO.File.Exists(oldImagePath))
                     {
-                        var oldImagePath = Path.Combine(_env.WebRootPath, oldImage.ImageUrl.TrimStart('/'));
-                        if (System.IO.File.Exists(oldImagePath))
-                        {
-                            System.IO.File.Delete(oldImagePath);
-                        }
+                        System.IO.File.Delete(oldImagePath);
                     }
-                    _context.ProductImages.RemoveRange(existingProduct.ProductImages);
                 }
 
-                // Αποθήκευση νέων εικόνων
-                var newImages = new List<ProductImage>();
-                if (ProductImages != null && ProductImages.Count > 0)
-                {
-                    int index = 0;
-                    foreach (var formFile in ProductImages)
-                    {
-                        if (formFile.Length > 0)
-                        {
-                            var fileName = $"{Guid.NewGuid()}{Path.GetExtension(formFile.FileName)}";
-                            var filePath = Path.Combine(_env.WebRootPath, "images", "products", fileName);
+                _context.ProductImages.RemoveRange(existingProduct.ProductImages);
 
-                            Directory.CreateDirectory(Path.GetDirectoryName(filePath));
+                var newImages = new List<ProductImage>();
+
+                // Κύρια εικόνα
+                if (MainImage != null && MainImage.Length > 0)
+                {
+                    var mainFileName = $"{Guid.NewGuid()}{Path.GetExtension(MainImage.FileName)}";
+                    var mainFilePath = Path.Combine(_env.WebRootPath, "images", "products", mainFileName);
+
+                    Directory.CreateDirectory(Path.GetDirectoryName(mainFilePath));
+
+                    using (var stream = new FileStream(mainFilePath, FileMode.Create))
+                    {
+                        await MainImage.CopyToAsync(stream);
+                    }
+
+                    newImages.Add(new ProductImage
+                    {
+                        ImageUrl = $"/images/products/{mainFileName}",
+                        IsMainImage = true
+                    });
+                }
+
+                // Δευτερεύουσες
+                if (AdditionalImages != null && AdditionalImages.Count > 0)
+                {
+                    foreach (var img in AdditionalImages)
+                    {
+                        if (img.Length > 0)
+                        {
+                            var fileName = $"{Guid.NewGuid()}{Path.GetExtension(img.FileName)}";
+                            var filePath = Path.Combine(_env.WebRootPath, "images", "products", fileName);
 
                             using (var stream = new FileStream(filePath, FileMode.Create))
                             {
-                                await formFile.CopyToAsync(stream);
+                                await img.CopyToAsync(stream);
                             }
 
                             newImages.Add(new ProductImage
                             {
                                 ImageUrl = $"/images/products/{fileName}",
-                                IsMainImage = index == 0
+                                IsMainImage = false
                             });
-                            index++;
                         }
                     }
                 }
 
-                // Ενημερώνουμε τις ιδιότητες
-                existingProduct.UserId = product.UserId;
-                existingProduct.Title = product.Title;
-                existingProduct.Description = product.Description;
-                existingProduct.Category = product.Category;
-                existingProduct.Price = product.Price;
-                existingProduct.Condition = product.Condition;
-                existingProduct.CreatedAt = product.CreatedAt;
-
                 existingProduct.ProductImages = newImages;
-
-                _context.Update(existingProduct);
-                await _context.SaveChangesAsync();
-
-                return RedirectToAction("GetProducts");
             }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!ProductExists(product.ProductId))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
+            // Αλλιώς κρατάμε τις παλιές εικόνες ως έχουν.
+
+            _context.Update(existingProduct);
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction("GetProducts");
         }
+
+
 
 
         // GET: Products/Delete/5

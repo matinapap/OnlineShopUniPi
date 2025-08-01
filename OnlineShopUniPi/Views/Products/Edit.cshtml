@@ -1,53 +1,168 @@
 ﻿@model OnlineShopUniPi.Models.Product
+@using Microsoft.AspNetCore.Mvc.Rendering
 
 @{
     ViewData["Title"] = "Edit";
     Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var gendercategoryList = new List<SelectListItem>
+    {
+        new SelectListItem { Text = "Male", Value = "Men" },
+        new SelectListItem { Text = "Female", Value = "Women" }
+    };
 }
 
-<h1>Edit</h1>
+<h1 class="mb-4 text-black text-center">Επεξεργασία Προϊόντος</h1>
 
-<h4>Product</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Edit" enctype="multipart/form-data">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <input type="hidden" asp-for="ProductId" />
-            <div class="form-group">
-                <label asp-for="Title" class="control-label"></label>
-                <input asp-for="Title" class="form-control" />
-                <span asp-validation-for="Title" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Description" class="control-label"></label>
-                <input asp-for="Description" class="form-control" />
-                <span asp-validation-for="Description" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Category" class="control-label"></label>
-                <input asp-for="Category" class="form-control" />
-                <span asp-validation-for="Category" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Price" class="control-label"></label>
-                <input asp-for="Price" class="form-control" />
-                <span asp-validation-for="Price" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Condition" class="control-label"></label>
-                <input asp-for="Condition" class="form-control" />
-                <span asp-validation-for="Condition" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label for="ProductImages">Νέες Φωτογραφίες</label>
-                <input type="file" name="ProductImages" id="ProductImages" class="form-control" multiple />
-            </div>
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow rounded-4 border-0">
+            <div class="card-body p-4">
+                <form asp-action="Edit" method="post" enctype="multipart/form-data">
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                    <input type="hidden" asp-for="ProductId" />
 
-            <div class="form-group mt-3">
-                <input type="submit" value="Save" class="btn btn-primary" />
+                    <div class="mb-3">
+                        <label asp-for="Title" class="form-label fw-bold"></label>
+                        <input asp-for="Title" class="form-control rounded-pill" />
+                        <span asp-validation-for="Title" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Description" class="form-label fw-bold"></label>
+                        <textarea asp-for="Description" class="form-control rounded-3" rows="3"></textarea>
+                        <span asp-validation-for="Description" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Gender" class="form-label fw-bold"></label>
+                        <select asp-for="Gender" class="form-select rounded-pill" id="GenderSelect">
+                            <option value="">-- Επιλέξτε φύλο --</option>
+                            @foreach (var g in gendercategoryList)
+                            {
+                                <option value="@g.Value" selected="@(Model.Gender == g.Value)">
+                                    @g.Text
+                                </option>
+                            }
+                        </select>
+                        <span asp-validation-for="Gender" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Category" class="form-label fw-bold"></label>
+                        <select asp-for="Category" class="form-select rounded-pill" id="CategorySelect">
+                            <option value="">-- Επιλέξτε κατηγορία --</option>
+                            <!-- οι κατηγορίες θα φορτωθούν από το script -->
+                        </select>
+                        <span asp-validation-for="Category" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Price" class="form-label fw-bold"></label>
+                        <input asp-for="Price" class="form-control rounded-pill" />
+                        <span asp-validation-for="Price" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Condition" class="form-label fw-bold"></label>
+                        <select asp-for="Condition" class="form-select rounded-pill">
+                            <option value="">-- Επιλέξτε κατάσταση --</option>
+                            <option value="New" selected="@(Model.Condition == "New")">New</option>
+                            <option value="Almost new" selected="@(Model.Condition == "Almost new")">Almost new</option>
+                            <option value="Used" selected="@(Model.Condition == "Used")">Used</option>
+                        </select>
+                        <span asp-validation-for="Condition" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="MainImage" class="form-label fw-bold">Κύρια Εικόνα</label>
+                        <input type="file" name="MainImage" id="MainImage" class="form-control rounded-pill" />
+                        <small class="form-text text-muted">Επιλέξτε μία κύρια εικόνα για το προϊόν.</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="AdditionalImages" class="form-label fw-bold">Δευτερεύουσες Εικόνες</label>
+                        <input type="file" name="AdditionalImages" id="AdditionalImages" class="form-control rounded-pill" multiple />
+                        <small class="form-text text-muted">Μπορείτε να ανεβάσετε πολλές δευτερεύουσες εικόνες.</small>
+                    </div>
+
+
+                    <div class="d-flex justify-content-center mt-4">
+                        <button type="submit" class="btn btn-success px-4 rounded-pill">
+                            <i class="bi bi-save me-1"></i> Αποθήκευση
+                        </button>
+                    </div>
+                </form>
             </div>
-        </form>
+        </div>
     </div>
 </div>
 
+@section Scripts {
+    <script>
+        const maleClothes = [
+            "Shirts",
+            "T-shirts / Tops",
+            "Sweaters and Hoodies",
+            "Jackets / Coats",
+            "Jeans and Pants",
+            "Other"
+        ];
+
+        const femaleClothes = [
+            "Dresses and bodysuits",
+            "T-shirts / Tops",
+            "Jackets / Coats",
+            "Beachwear / Swimwear",
+            "Shirts and blouses",
+            "Pants / Trousers",
+            "Sweaters / Jumpers",
+            "Jeans",
+            "Hoodies / Sweatshirts",
+            "Skirts and shorts",
+            "Other"
+        ];
+
+        const genderSelect = document.getElementById("GenderSelect");
+        const categorySelect = document.getElementById("CategorySelect");
+
+        function populateCategories(selectedGender, selectedCategory) {
+            categorySelect.innerHTML = '<option value="">-- Επιλέξτε κατηγορία --</option>';
+            let clothesList = [];
+
+            if (selectedGender === "Men") {
+                clothesList = maleClothes;
+            } else if (selectedGender === "Women") {
+                clothesList = femaleClothes;
+            }
+
+            if (clothesList.length > 0) {
+                clothesList.forEach(cat => {
+                    const option = document.createElement("option");
+                    option.value = cat;
+                    option.text = cat;
+                    if (cat === selectedCategory) {
+                        option.selected = true;
+                    }
+                    categorySelect.appendChild(option);
+                });
+                categorySelect.disabled = false;
+            } else {
+                categorySelect.disabled = true;
+            }
+        }
+
+        // On page load
+        document.addEventListener("DOMContentLoaded", function () {
+            const currentGender = "@Model.Gender";
+            const currentCategory = "@Model.Category";
+            if (currentGender) {
+                populateCategories(currentGender, currentCategory);
+            }
+        });
+
+        genderSelect.addEventListener("change", function () {
+            populateCategories(this.value, "");
+        });
+    </script>
+}
