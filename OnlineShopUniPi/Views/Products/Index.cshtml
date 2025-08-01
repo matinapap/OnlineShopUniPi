@@ -1,72 +1,67 @@
 ﻿@model IEnumerable<OnlineShopUniPi.Models.Product>
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Προϊόντα";
     Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var searchedId = Context.Request.Query["productId"].ToString();
 }
 
-<h1>Index</h1>
+<div class="container mt-4">
+    <h2 class="mb-4">Λίστα Προϊόντων</h2>
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.Title)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Description)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Category)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Price)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Condition)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.CreatedAt)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.User)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.Title)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Description)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Category)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Price)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Condition)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.CreatedAt)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.User.UserId)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.ProductId">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.ProductId">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.ProductId">Delete</a>
-            </td>
-        </tr>
-}
-    </tbody>
-</table>
+    <!-- Search Form -->
+    <form asp-action="Index" method="get" class="mb-3 row g-2 align-items-center">
+        <div class="col-auto">
+            <input type="number" name="productId" class="form-control" placeholder="Αναζήτηση με Product ID" value="@searchedId" />
+        </div>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-primary">Αναζήτηση</button>
+        </div>
+    </form>
+
+    @if (Model.Any())
+    {
+        <table class="table table-bordered table-striped table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>@Html.DisplayNameFor(model => model.First().ProductId)</th>
+                    <th>@Html.DisplayNameFor(model => model.First().Title)</th>
+                    <th>@Html.DisplayNameFor(model => model.First().Description)</th>
+                    <th>@Html.DisplayNameFor(model => model.First().Category)</th>
+                    <th>@Html.DisplayNameFor(model => model.First().Price)</th>
+                    <th>@Html.DisplayNameFor(model => model.First().Condition)</th>
+                    <th>@Html.DisplayNameFor(model => model.First().CreatedAt)</th>
+                    <th>Χρήστης</th>
+                    <th>Ενέργειες</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>@item.ProductId</td>
+                        <td>@item.Title</td>
+                        <td>@item.Description</td>
+                        <td>@item.Category</td>
+                        <td>@item.Price.ToString("C")</td>
+                        <td>@item.Condition</td>
+                        <td>@item.CreatedAt?.ToString("dd/MM/yyyy")</td>
+                        <td>@item.User?.UserId</td>
+                        <td>
+                            <a asp-action="Details" asp-route-id="@item.ProductId" class="btn btn-sm btn-info me-1">Προβολή</a>
+                            <a asp-action="Edit" asp-route-id="@item.ProductId" class="btn btn-sm btn-warning me-1">Επεξεργασία</a>
+                            <a asp-action="Delete" asp-route-id="@item.ProductId" class="btn btn-sm btn-danger">Διαγραφή</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <div class="alert alert-warning">
+            Δεν βρέθηκαν προϊόντα με το συγκεκριμένο κριτήριο.
+        </div>
+    }
+</div>

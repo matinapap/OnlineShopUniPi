@@ -28,22 +28,29 @@ namespace OnlineShopUniPi.Controllers
         }
 
         // GET: Products
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(int? productId)
         {
             try
             {
-                var products = await _context.Products
-                    .Include(p => p.User)
-                    .ToListAsync();
+                IQueryable<Product> query = _context.Products
+                    .Include(p => p.User);
 
-                return View(products ?? new List<Product>()); // Πάντα μη-null
+                // Αν έχει δοθεί συγκεκριμένο ProductId, φιλτράρουμε
+                if (productId.HasValue)
+                {
+                    query = query.Where(p => p.ProductId == productId.Value);
+                }
+
+                var products = await query.ToListAsync();
+                return View(products);
             }
             catch (Exception ex)
             {
-                // Logging εδώ
+                // Logging ή αναφορά σφάλματος
                 return View(new List<Product>());
             }
         }
+
 
         [Authorize]
         public async Task<IActionResult> GetProducts()
