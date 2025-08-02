@@ -1,108 +1,160 @@
-﻿@{
-    ViewData["Title"] = "Clothess";
+﻿@model List<OnlineShopUniPi.Models.Product>
+
+@{
+    ViewData["Title"] = "Clothes";
     Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var selectedGender = ViewBag.SelectedGender as string ?? "Women";
+    var selectedCategory = ViewBag.SelectedCategory as string;
 }
 
+<div class="container mt-5">
 
-<!DOCTYPE html>
-<html lang="el">
-<body>
-
-    <div class="section">
-        <h2>Κατηγορίες</h2>
-        <div class="categories">
-            <div class="category-tab active">Όλα</div>
-            <div class="category-tab">Ανδρικά</div>
-            <div class="category-tab">Γυναικεία</div>
-            <div class="category-tab">Παιδικά</div>
-            <div class="category-tab">Παντόφλες</div>
-            <div class="category-tab">Αξεσουάρ</div>
-            <div class="category-tab">Εποχικά</div>
+    <!-- Gender Filter -->
+    <div class="section text-center mb-4">
+        <h2 class="mb-3">Φύλο</h2>
+        <div class="btn-group" role="group">
+            <a asp-action="ClothingPage" asp-route-gender="Women" class="btn btn-outline-primary @(selectedGender == "Women" ? "active" : "")">Women</a>
+            <a asp-action="ClothingPage" asp-route-gender="Men" class="btn btn-outline-primary @(selectedGender == "Men" ? "active" : "")">Men</a>
         </div>
     </div>
 
-    <div class="section">
-        <h2>Προτεινόμενα Ρούχα</h2>
-        <div class="products">
-            <div class="product-card">
-                <img src="https://via.placeholder.com/200x180?text=Δερμάτινο+Μπουφάν" alt="Δερμάτινο Μπουφάν">
-                <h3>Δερμάτινο Μπουφάν</h3>
-                <div class="price">€30.00</div>
-                <button class="cart-btn">Προσθήκη</button>
-            </div>
-            <div class="product-card">
-                <img src="https://via.placeholder.com/200x180?text=Καλοκαιρινό+Φόρεμα" alt="Καλοκαιρινό Φόρεμα">
-                <h3>Καλοκαιρινό Φόρεμα</h3>
-                <div class="price">€24.50</div>
-                <button class="cart-btn">Προσθήκη</button>
-            </div>
-            <div class="product-card">
-                <img src="https://via.placeholder.com/200x180?text=Αθλητικά+Παπούτσια" alt="Αθλητικά Παπούτσια">
-                <h3>Αθλητικά Παπούτσια</h3>
-                <div class="price">€55.00</div>
-                <button class="cart-btn">Προσθήκη</button>
-            </div>
-            <div class="product-card">
-                <img src="https://via.placeholder.com/200x180?text=Τζιν+Jeans" alt="Τζιν Jeans">
-                <h3>Τζιν Jeans</h3>
-                <div class="price">€28.00</div>
-                <button class="cart-btn">Προσθήκη</button>
-            </div>
+    <!-- Category Filter -->
+    <div class="section text-center mb-5">
+        <h2 class="mb-3">Κατηγορίες</h2>
+        <div class="d-flex flex-wrap justify-content-center gap-2">
+            @{
+                var categories = selectedGender == "Women"
+                ? new[] { "Dresses and bodysuits", "T-shirts / Tops", "Jackets / Coats", "Beachwear / Swimwear", "Shirts and blouses", "Pants / Trousers", "Sweaters / Jumpers", "Jeans", "Hoodies / Sweatshirts", "Skirts and shorts", "Other" }
+                : new[] { "Shirts", "T-shirts / Tops", "Sweaters and Hoodies", "Jackets / Coats", "Jeans and Pants", "Other" };
+
+                foreach (var category in categories)
+                {
+                    <a asp-action="ClothingPage"
+                       asp-route-gender="@selectedGender"
+                       asp-route-category="@category"
+                       class="btn btn-outline-secondary rounded-pill @(selectedCategory == category ? "active" : "")">
+                        @category
+                    </a>
+                }
+            }
         </div>
     </div>
 
+    <!-- Products -->
     <div class="section">
-        <h2>Νέα Άφιξη</h2>
-        <div class="products-grid">
-            <div class="grid-item">
-                <img src="https://via.placeholder.com/150x150?text=Μπλούζα" alt="Μπλούζα">
-                <h4>Μπλούζα</h4>
-                <div class="price">€15.00</div>
-                <button class="cart-btn">Προσθήκη</button>
-            </div>
-            <div class="grid-item">
-                <img src="https://via.placeholder.com/150x150?text=Σορτς" alt="Σορτς">
-                <h4>Σορτς</h4>
-                <div class="price">€12.00</div>
-                <button class="cart-btn">Προσθήκη</button>
-            </div>
-            <div class="grid-item">
-                <img src="https://via.placeholder.com/150x150?text=Παπούτσια" alt="Παπούτσια">
-                <h4>Παπούτσια</h4>
-                <div class="price">€45.00</div>
-                <button class="cart-btn">Προσθήκη</button>
-            </div>
-            <div class="grid-item">
-                <img src="https://via.placeholder.com/150x150?text=Γάντια" alt="Γάντια">
-                <h4>Γάντια</h4>
-                <div class="price">€8.50</div>
-                <button class="cart-btn">Προσθήκη</button>
-            </div>
-            <div class="grid-item">
-                <img src="https://via.placeholder.com/150x150?text=Καπέλο" alt="Καπέλο">
-                <h4>Καπέλο</h4>
-                <div class="price">€10.00</div>
-                <button class="cart-btn">Προσθήκη</button>
-            </div>
+        <h2 class="mb-4 text-center">Προϊόντα</h2>
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+            @if (!Model.Any())
+            {
+                <p class="text-muted text-center">Δεν βρέθηκαν προϊόντα για αυτή την επιλογή.</p>
+            }
+            else
+            {
+                foreach (var item in Model)
+                {
+                    var images = item.ProductImages?.ToList() ?? new List<OnlineShopUniPi.Models.ProductImage>();
+                    var hasImages = images.Count > 0;
+                    var carouselId = $"carousel_{item.ProductId}";
+
+                    int activeIndex = images.FindIndex(img => img.IsMainImage.HasValue && img.IsMainImage.Value);
+                    if (activeIndex == -1) activeIndex = 0;
+
+                    <div class="col">
+                        <div class="card h-100 border-0 shadow-sm">
+                            <div class="position-relative">
+
+                                @if (hasImages)
+                                {
+                                    <div id="@carouselId" class="carousel slide" data-bs-interval="false">
+                                        <div class="carousel-inner">
+                                            @for (int i = 0; i < images.Count; i++)
+                                            {
+                                                <div class="carousel-item @(i == activeIndex ? "active" : "")">
+                                                    <img src="@Url.Content("~/" + images[i].ImageUrl.TrimStart('/'))"
+                                                         class="d-block w-100 object-fit-contain bg-light p-3"
+                                                         style="height: 200px;"
+                                                         alt="Image @(i + 1)">
+                                                </div>
+                                            }
+                                        </div>
+
+                                        @if (images.Count > 1)
+                                        {
+                                            <button class="carousel-control-prev" type="button" data-bs-target="#@carouselId" data-bs-slide="prev">
+                                                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                                <span class="visually-hidden">Previous</span>
+                                            </button>
+                                            <button class="carousel-control-next" type="button" data-bs-target="#@carouselId" data-bs-slide="next">
+                                                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                                <span class="visually-hidden">Next</span>
+                                            </button>
+                                        }
+                                    </div>
+                                }
+                                else
+                                {
+                                    <img src="~/images/resources/no_image.png" class="card-img-top p-3 object-fit-contain bg-light" alt="@item.Title" style="height: 200px;">
+                                }
+
+                                <!-- Badge κατάστασης -->
+                                <div class="position-absolute top-0 start-0 m-2">
+                                    <span class="badge bg-@(item.Condition == "Νέο" ? "success" : "warning") text-dark">
+                                        @item.Condition
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="card-body">
+                                <h5 class="card-title fw-bold text-truncate">@item.Title</h5>
+                                <p class="card-text text-muted small" style="min-height: 40px;">
+                                    @(item.Description?.Length > 60 ? item.Description.Substring(0, 60) + "..." : item.Description)
+                                </p>
+
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="badge bg-secondary">@item.Category</span>
+                                    <h5 class="text-primary mb-0">€@item.Price</h5>
+                                </div>
+                            </div>
+
+                            <!-- Καρδιά αγαπημένων -->
+                            <button class="btn btn-sm btn-light position-absolute top-0 end-0 m-2 favorite-toggle"
+                                    data-product-id="@item.ProductId"
+                                    title="Αγαπημένο"
+                                    style="z-index: 10;">
+                                <i class="bi bi-heart text-danger border border-dark rounded-circle p-1" style="font-size: 1.2rem;"></i>
+                            </button>
+
+                            <div class="card-footer bg-white border-top-0 d-flex justify-content-center pt-0">
+                                <a asp-controller="Products" asp-action="Details" asp-route-id="@item.ProductId" class="btn btn-outline-primary btn-sm px-3">
+                                    <i class="bi bi-eye-fill me-1"></i> Λεπτομέρειες
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
         </div>
     </div>
+</div>
 
+@section Scripts {
     <script>
-        // Απλή λειτουργικότητα για τα tabs
-        document.querySelectorAll('.category-tab').forEach(tab => {
-            tab.addEventListener('click', function() {
-                document.querySelector('.category-tab.active').classList.remove('active');
-                this.classList.add('active');
-                // Εδώ θα μπορούσατε να προσθέσετε κώδικα για φιλτράρισμα προϊόντων
-            });
-        });
+        document.addEventListener('DOMContentLoaded', function () {
+            const isAuthenticated = document.body.dataset.authenticated === "true";
 
-        // Λειτουργικότητα για το κουμπί προσθήκης στο καλάθι
-        document.querySelectorAll('.cart-btn').forEach(button => {
-            button.addEventListener('click', function() {
-                alert('Το προϊόν προστέθηκε στο καλάθι σας!');
+            document.querySelectorAll('.favorite-toggle').forEach(button => {
+                button.addEventListener('click', function () {
+                    if (!isAuthenticated) {
+                        window.location.href = '/Users/LoginSignup';
+                        return;
+                    }
+
+                    const icon = this.querySelector('i');
+                    icon.classList.toggle('bi-heart');
+                    icon.classList.toggle('bi-heart-fill');
+                });
             });
         });
     </script>
-</body>
-</html>
+}

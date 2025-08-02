@@ -24,10 +24,27 @@ namespace OnlineShopUniPi.Controllers
             return View();
         }
 
-        public IActionResult ClothingPage()
+        [HttpGet]
+        public IActionResult ClothingPage(string gender = "Women", string category = null)
         {
-            return View(); // Προβάλλει το Views/Home/ClothingPage.cshtml
+            var productsQuery = _context.Products
+                .Include(p => p.ProductImages) // Για να φορτώνονται και οι εικόνες
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(gender))
+                productsQuery = productsQuery.Where(p => p.Gender == gender);
+
+            if (!string.IsNullOrEmpty(category))
+                productsQuery = productsQuery.Where(p => p.Category == category);
+
+            var products = productsQuery.ToList();
+
+            ViewBag.SelectedGender = gender;
+            ViewBag.SelectedCategory = category;
+
+            return View(products);
         }
+
 
         public IActionResult Privacy()
         {
