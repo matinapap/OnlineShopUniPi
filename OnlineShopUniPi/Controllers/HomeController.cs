@@ -1,4 +1,6 @@
 ﻿using System.Diagnostics;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -25,7 +27,7 @@ namespace OnlineShopUniPi.Controllers
         }
 
         [HttpGet]
-        public IActionResult ClothingPage(string gender = "Women", string category = null)
+        public async Task<IActionResult> ClothingPage(string gender = "Women", string category = null)
         {
             var productsQuery = _context.Products
                 .Include(p => p.ProductImages) // Για να φορτώνονται και οι εικόνες
@@ -37,13 +39,29 @@ namespace OnlineShopUniPi.Controllers
             if (!string.IsNullOrEmpty(category))
                 productsQuery = productsQuery.Where(p => p.Category == category);
 
-            var products = productsQuery.ToList();
+            var products = await productsQuery.ToListAsync();
 
             ViewBag.SelectedGender = gender;
             ViewBag.SelectedCategory = category;
 
+            if (User.Identity.IsAuthenticated)
+            {
+                var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+                var favoriteProductIds = await _context.Favorites
+                    .Where(f => f.UserId == userId)
+                    .Select(f => f.ProductId)
+                    .ToListAsync();
+
+                ViewBag.FavoriteProductIds = favoriteProductIds;
+            }
+            else
+            {
+                ViewBag.FavoriteProductIds = new List<int>();
+            }
+
             return View(products);
         }
+
 
 
         public IActionResult Privacy()

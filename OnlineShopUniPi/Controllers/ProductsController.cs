@@ -51,6 +51,36 @@ namespace OnlineShopUniPi.Controllers
             }
         }
 
+        [Authorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Favorites([FromBody] Favorite model)
+        {
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+            // Αντικατάσταση UserId με τον πραγματικό χρήστη
+            model.UserId = userId;
+
+            var favoriteExists = await _context.Favorites
+                .AnyAsync(f => f.UserId == userId && f.ProductId == model.ProductId);
+
+            if (!favoriteExists)
+            {
+                model.AddedAt = DateTime.UtcNow;
+                _context.Favorites.Add(model);
+            }
+            else
+            {
+                var existing = await _context.Favorites
+                    .FirstAsync(f => f.UserId == userId && f.ProductId == model.ProductId);
+
+                _context.Favorites.Remove(existing);
+            }
+
+            await _context.SaveChangesAsync();
+            return Json(new { success = true });
+        }
+
 
         [Authorize]
         public async Task<IActionResult> GetProducts()
@@ -233,11 +263,7 @@ namespace OnlineShopUniPi.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(
-     int id,
-     [Bind("ProductId,Title,Description,Gender,Category,Price,Condition")] Product product,
-     IFormFile ?MainImage,
-     List<IFormFile> ?AdditionalImages)
+        public async Task<IActionResult> Edit(int id, [Bind("ProductId,Title,Description,Gender,Category,Price,Condition")] Product product, IFormFile ?MainImage, List<IFormFile> ?AdditionalImages)
         {
             if (id != product.ProductId)
             {
