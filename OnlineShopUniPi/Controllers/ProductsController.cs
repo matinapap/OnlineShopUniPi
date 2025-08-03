@@ -81,6 +81,24 @@ namespace OnlineShopUniPi.Controllers
             return Json(new { success = true });
         }
 
+        [Authorize]
+        [HttpGet]
+        public async Task<IActionResult> Favorites()
+        {
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+            var favoriteProductIds = await _context.Favorites
+                .Where(f => f.UserId == userId)
+                .Select(f => f.ProductId)
+                .ToListAsync();
+
+            var favoriteProducts = await _context.Products
+                .Include(p => p.ProductImages)
+                .Where(p => favoriteProductIds.Contains(p.ProductId))
+                .ToListAsync();
+
+            return View(favoriteProducts);
+        }
 
         [Authorize]
         public async Task<IActionResult> GetProducts()
