@@ -21,10 +21,20 @@ namespace OnlineShopUniPi.Controllers
             _webHostEnvironment = webHostEnvironment;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
+            var topFavoritedProducts = await _context.Products
+                .Where(p => p.Favorites.Any())
+                .OrderByDescending(p => p.Favorites.Count)
+                .Take(10)
+                .Include(p => p.ProductImages)
+                .ToListAsync();
+
+            ViewBag.TopFavorited = topFavoritedProducts;
+
             return View();
         }
+
 
         [HttpGet]
         public async Task<IActionResult> ClothingPage(string gender = "Women", string category = null)

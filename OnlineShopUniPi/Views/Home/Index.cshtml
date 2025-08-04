@@ -10,24 +10,28 @@
 </section>
 
 <section class="section">
-    <h2>✨ Προτεινόμενα Ρούχα</h2>
-    <div class="products">
-        <div class="product-card">
-            <img src="~/images/products/cloth.png" alt="Jacket" />
-            <h3>Δερμάτινο Μπουφάν</h3>
-            <p>€39.99</p>
-        </div>
-        <div class="product-card">
-            <img src="~/images/products/cloth.png" alt="Dress" />
-            <h3>Καλοκαιρινό Φόρεμα</h3>
-            <p>€24.50</p>
-        </div>
-        <div class="product-card">
-            <img src="~/images/products/cloth.png" alt="Sneakers" />
-            <h3>Αθλητικά Παπούτσια</h3>
-            <p>€55.00</p>
-        </div>
-    </div>
+    <h2>✨ Δημοφηλή</h2>
+    @if (ViewBag.TopFavorited is List<OnlineShopUniPi.Models.Product> topFavorites && topFavorites.Any())
+    {
+        <section class="section">
+            <div class="products">
+                @foreach (var item in topFavorites)
+                {
+                    var mainImage = item.ProductImages?.FirstOrDefault(img => img.IsMainImage == true)?.ImageUrl
+                    ?? "~/images/resources/no_image.png";
+
+                    <div class="product-card">
+                        <a href="@Url.Action("Details", "Products", new { id = item.ProductId })">
+                            <img src="@Url.Content("~/" + mainImage.TrimStart('/'))" alt="@item.Title" />
+                            <h3>@item.Title</h3>
+                            <p>€@item.Price</p>
+                        </a>
+                    </div>
+                }
+            </div>
+        </section>
+    }
+
 </section>
 
 <section class="section">
