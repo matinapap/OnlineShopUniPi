@@ -50,7 +50,7 @@
 
                 <div class="profile-link">
                     <a asp-controller="Products" asp-action="Favorites" class="icon-link"><i class="fas fa-heart"></i></a>
-                    <a href="/cart" class="icon-link"><i class="fas fa-shopping-bag"></i></a>
+                    <a asp-controller="Products" asp-action="Cart" class="icon-link"><i class="fas fa-shopping-bag"></i></a>
                     @await Html.PartialAsync("_UserProfile")
                 </div>
             }

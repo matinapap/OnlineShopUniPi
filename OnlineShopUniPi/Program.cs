@@ -15,10 +15,13 @@ builder.Services.AddDbContext<OnlineStoreDBContext>(options =>
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
-        options.LoginPath = "/Users/LoginSignup"; // Πού θα πηγαίνει αν δεν είναι logged in
-        options.AccessDeniedPath = "/Users/AccessDenied"; // Optional
-        options.ExpireTimeSpan = TimeSpan.FromMinutes(60); // Optional
+        options.LoginPath = "/Users/LoginSignup";
+        options.AccessDeniedPath = "/Users/AccessDenied";
+        options.ExpireTimeSpan = TimeSpan.FromMinutes(60);
     });
+
+// ✅ Add Session BEFORE Build
+builder.Services.AddSession();
 
 var app = builder.Build();
 
@@ -26,7 +29,6 @@ var app = builder.Build();
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
@@ -35,9 +37,12 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
-// Enable authentication and authorization (authentication must be before authorization)
+// Authentication & Authorization
 app.UseAuthentication();
 app.UseAuthorization();
+
+// ✅ Use Session AFTER Routing, BEFORE Endpoints
+app.UseSession();
 
 app.MapControllerRoute(
     name: "default",

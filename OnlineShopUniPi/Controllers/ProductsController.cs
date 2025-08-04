@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using OnlineShopUniPi.Models;
+using OnlineShopUniPi.Helpers;
 
 namespace OnlineShopUniPi.Controllers
 {
@@ -26,6 +27,21 @@ namespace OnlineShopUniPi.Controllers
             _logger = logger;
             _webHostEnvironment = webHostEnvironment;
         }
+
+        [HttpPost]
+        public IActionResult AddToCart(int id)
+        {
+            List<int> cart = HttpContext.Session.GetObjectFromJson<List<int>>("Cart") ?? new List<int>();
+
+            if (!cart.Contains(id))
+            {
+                cart.Add(id);
+                HttpContext.Session.SetObjectAsJson("Cart", cart);
+            }
+
+            return RedirectToAction("Details", new { id });
+        }
+
 
         // GET: Products
         public async Task<IActionResult> Index(int? productId)
@@ -457,6 +473,32 @@ namespace OnlineShopUniPi.Controllers
             return RedirectToAction("GetProducts");
         }
 
+        [HttpPost]
+        public IActionResult RemoveFromCart(int id)
+        {
+            var cart = HttpContext.Session.GetObjectFromJson<List<int>>("Cart") ?? new List<int>();
+
+            if (cart.Contains(id))
+            {
+                cart.Remove(id);
+                HttpContext.Session.SetObjectAsJson("Cart", cart);
+            }
+
+            return RedirectToAction("Cart");
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Cart()
+        {
+            var cart = HttpContext.Session.GetObjectFromJson<List<int>>("Cart") ?? new List<int>();
+
+            var productsInCart = await _context.Products
+                .Include(p => p.ProductImages)
+                .Where(p => cart.Contains(p.ProductId))
+                .ToListAsync();
+
+            return View(productsInCart);
+        }
 
         private bool ProductExists(int id)
         {

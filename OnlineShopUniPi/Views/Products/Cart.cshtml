@@ -1,0 +1,48 @@
+﻿@model List<OnlineShopUniPi.Models.Product>
+
+@{
+    ViewData["Title"] = "Το Καλάθι μου";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h1 class="my-4">🛒 Το Καλάθι μου</h1>
+
+@if (!Model.Any())
+{
+    <p class="text-muted">Το καλάθι σου είναι άδειο.</p>
+}
+else
+{
+    <div class="row">
+        @foreach (var product in Model)
+        {
+            <div class="col-md-4 mb-3">
+                <div class="card shadow">
+                    @if (product.ProductImages != null && product.ProductImages.Any())
+                    {
+                        <img src="@product.ProductImages.First().ImageUrl" class="card-img-top" style="height: 200px; object-fit: cover;" />
+                    }
+                    else
+                    {
+                        <img src="~/images/products/cloth.png" class="card-img-top" style="height: 200px; object-fit: cover;" />
+                    }
+
+                    <div class="card-body">
+                        <h5 class="card-title">@product.Title</h5>
+                        <p class="card-text">€@product.Price</p>
+
+                        <form asp-action="RemoveFromCart" asp-route-id="@product.ProductId" method="post">
+                            <button type="submit" class="btn btn-danger">🗑️ Αφαίρεση</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <div class="mt-4">
+        <form asp-controller="Orders" asp-action="Checkout" method="post">
+            <button type="submit" class="btn btn-success btn-lg">✅ Ολοκλήρωση Αγοράς</button>
+        </form>
+    </div>
+}
