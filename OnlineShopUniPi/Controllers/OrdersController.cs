@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using OnlineShopUniPi.Helpers;
 using OnlineShopUniPi.Models;
 
 namespace OnlineShopUniPi.Controllers
@@ -17,6 +19,78 @@ namespace OnlineShopUniPi.Controllers
         {
             _context = context;
         }
+
+        [HttpGet]
+        public IActionResult Checkout()
+        {
+            return View();
+        }
+
+        public IActionResult ThankYou()
+        {
+            return View();
+        }
+
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Checkout(string paymentMethod)
+        {
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var user = await _context.Users.FindAsync(userId);
+
+            var cart = HttpContext.Session.GetObjectFromJson<List<int>>("Cart") ?? new List<int>();
+            if (!cart.Any())
+            {
+                TempData["Error"] = "Το καλάθι είναι άδειο.";
+                return RedirectToAction("Cart", "Product");
+            }
+
+            var products = await _context.Products
+                .Where(p => cart.Contains(p.ProductId))
+                .ToListAsync();
+
+            var total = products.Sum(p => p.Price);
+
+            var order = new Order
+            {
+                UserId = userId,
+                TotalPrice = total,
+                OrderStatus = "Σε επεξεργασία",
+                OrderDate = DateTime.Now,
+                ShippingAddress = $"{user.Address}, {user.City}, {user.Country}",
+                OrderItems = new List<OrderItem>(),
+                Transactions = new List<Transaction>()
+            };
+
+            foreach (var product in products)
+            {
+                order.OrderItems.Add(new OrderItem
+                {
+                    ProductId = product.ProductId,
+                    Quantity = 1,
+                    Price = product.Price
+                });
+            }
+
+            var transaction = new Transaction
+            {
+                Amount = total,
+                PaymentMethod = paymentMethod,
+                TransactionStatus = "Ολοκληρώθηκε",
+                TransactionDate = DateTime.Now
+            };
+
+            order.Transactions.Add(transaction);
+
+            _context.Orders.Add(order);
+            await _context.SaveChangesAsync();
+
+            HttpContext.Session.Remove("Cart");
+
+            return RedirectToAction("ThankYou");
+        }
+
 
         // GET: Orders
         public async Task<IActionResult> Index()
