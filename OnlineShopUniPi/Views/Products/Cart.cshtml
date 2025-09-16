@@ -3,46 +3,163 @@
 @{
     ViewData["Title"] = "Το Καλάθι μου";
     Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var quantities = ViewBag.CartQuantities as Dictionary<int, int> ?? new Dictionary<int, int>();
 }
 
-<h1 class="my-4">🛒 Το Καλάθι μου</h1>
+<!-- Κρυφό φόρμακι για το CSRF token -->
+<form id="antiForgeryForm" style="display:none;">
+    @Html.AntiForgeryToken()
+</form>
+
+<h1 class="my-4 text-center">🛒 Το Καλάθι μου</h1>
 
 @if (!Model.Any())
 {
-    <p class="text-muted">Το καλάθι σου είναι άδειο.</p>
+    <p class="text-muted text-center">Το καλάθι σου είναι άδειο.</p>
 }
 else
 {
-    <div class="row">
+    <div class="row g-4">
         @foreach (var product in Model)
         {
-            <div class="col-md-4 mb-3">
-                <div class="card shadow">
-                    @if (product.ProductImages != null && product.ProductImages.Any())
-                    {
-                        <img src="@product.ProductImages.First().ImageUrl" class="card-img-top" style="height: 200px; object-fit: cover;" />
-                    }
-                    else
-                    {
-                        <img src="~/images/products/cloth.png" class="card-img-top" style="height: 200px; object-fit: cover;" />
-                    }
+            var currentQuantity = quantities.ContainsKey(product.ProductId) ? quantities[product.ProductId] : 1;
+            var images = product.ProductImages?.ToList() ?? new List<OnlineShopUniPi.Models.ProductImage>();
+            var hasImages = images.Count > 0;
+            var carouselId = $"carousel_{product.ProductId}";
+            int activeIndex = images.FindIndex(img => img.IsMainImage.HasValue && img.IsMainImage.Value);
+            if (activeIndex == -1) activeIndex = 0;
 
-                    <div class="card-body">
+            <div class="col-md-4">
+                <div class="card shadow h-100">
+                    <div class="position-relative">
+                        @if (hasImages)
+                        {
+                            <div id="@carouselId" class="carousel slide" data-bs-interval="false">
+                                <div class="carousel-inner">
+                                    @for (int i = 0; i < images.Count; i++)
+                                    {
+                                        <div class="carousel-item @(i == activeIndex ? "active" : "")">
+                                            <img src="@Url.Content("~/" + images[i].ImageUrl.TrimStart('/'))"
+                                                 class="d-block w-100 object-fit-contain bg-light p-3"
+                                                 style="height: 200px;" alt="Image @(i+1)">
+                                        </div>
+                                    }
+                                </div>
+                                @if (images.Count > 1)
+                                {
+                                    <button class="carousel-control-prev" type="button" data-bs-target="#@carouselId" data-bs-slide="prev">
+                                        <span class="carousel-control-prev-icon"></span>
+                                        <span class="visually-hidden">Previous</span>
+                                    </button>
+                                    <button class="carousel-control-next" type="button" data-bs-target="#@carouselId" data-bs-slide="next">
+                                        <span class="carousel-control-next-icon"></span>
+                                        <span class="visually-hidden">Next</span>
+                                    </button>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <img src="~/images/resources/no_image.png" class="card-img-top p-3 object-fit-contain bg-light" style="height:200px;" />
+                        }
+                    </div>
+
+                    <div class="card-body d-flex flex-column">
                         <h5 class="card-title">@product.Title</h5>
-                        <p class="card-text">€@product.Price</p>
+                        <p class="card-text">Τιμή Μονάδας: €@product.Price</p>
 
-                        <form asp-action="RemoveFromCart" asp-route-id="@product.ProductId" method="post">
-                            <button type="submit" class="btn btn-danger">🗑️ Αφαίρεση</button>
-                        </form>
+                        <div class="input-group mb-2" style="max-width:150px;">
+                            <button type="button" class="btn btn-outline-secondary btn-decrease" data-productid="@product.ProductId">-</button>
+                            <input type="number" class="form-control text-center quantity-input"
+                                   value="@currentQuantity" min="1" max="@product.Quantity"
+                                   data-productid="@product.ProductId" style="font-size:1.2rem; padding:0.5rem;" />
+                            <button type="button" class="btn btn-outline-secondary btn-increase" data-productid="@product.ProductId">+</button>
+                        </div>
+
+                        <div class="d-flex gap-2 mt-auto">
+                            <form asp-action="RemoveFromCart" asp-route-id="@product.ProductId" method="post" class="flex-fill">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-danger w-100">🗑️ Αφαίρεση</button>
+                            </form>
+
+                            <a asp-controller="Products" asp-action="Details" asp-route-id="@product.ProductId" class="btn btn-primary flex-fill">
+                                🔍 Λεπτομέρειες
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
         }
     </div>
 
-    <div class="mt-4">
+    <div class="mt-4 text-center">
+        <h4>Σύνολο Καλαθιού: €<span id="cartTotal">@Model.Sum(p => (quantities.ContainsKey(p.ProductId) ? quantities[p.ProductId] : 1) * p.Price)</span></h4>
         <form asp-controller="Orders" asp-action="Checkout" method="post">
             <button type="submit" class="btn btn-success btn-lg">✅ Ολοκλήρωση Αγοράς</button>
         </form>
     </div>
+}
+
+@section Scripts {
+    <script>
+        function getAntiForgeryToken() {
+            const tokenInput = document.querySelector('#antiForgeryForm input[name="__RequestVerificationToken"]');
+            return tokenInput ? tokenInput.value : '';
+        }
+
+        function updateCart(productId, quantity) {
+            fetch('@Url.Action("UpdateCartQuantity", "Products")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': getAntiForgeryToken()
+                },
+                body: JSON.stringify({ productId: productId, quantity: parseInt(quantity) })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.success){
+                    document.getElementById('cartTotal').innerText = data.total.toFixed(2);
+                }
+            });
+        }
+
+        document.querySelectorAll('.btn-increase').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const productId = parseInt(btn.dataset.productid);
+                const input = document.querySelector('.quantity-input[data-productid="'+productId+'"]');
+                let val = parseInt(input.value);
+                const max = parseInt(input.max);
+                if(val < max) {
+                    input.value = val + 1;
+                    updateCart(productId, input.value);
+                }
+            });
+        });
+
+        document.querySelectorAll('.btn-decrease').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const productId = parseInt(btn.dataset.productid);
+                const input = document.querySelector('.quantity-input[data-productid="'+productId+'"]');
+                let val = parseInt(input.value);
+                if(val > 1) {
+                    input.value = val - 1;
+                    updateCart(productId, input.value);
+                }
+            });
+        });
+
+        document.querySelectorAll('.quantity-input').forEach(input => {
+            input.addEventListener('change', () => {
+                const productId = parseInt(input.dataset.productid);
+                let val = parseInt(input.value);
+                const max = parseInt(input.max);
+                if(val < 1) val = 1;
+                if(val > max) val = max;
+                input.value = val;
+                updateCart(productId, val);
+            });
+        });
+    </script>
 }

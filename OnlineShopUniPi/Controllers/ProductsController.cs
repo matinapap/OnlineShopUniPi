@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using OnlineShopUniPi.Models;
 using OnlineShopUniPi.Helpers;
+using Newtonsoft.Json;
 
 namespace OnlineShopUniPi.Controllers
 {
@@ -29,18 +30,41 @@ namespace OnlineShopUniPi.Controllers
         }
 
         [HttpPost]
-        public IActionResult AddToCart(int id)
+        public IActionResult AddToCart(int id, int quantity)
         {
-            List<int> cart = HttpContext.Session.GetObjectFromJson<List<int>>("Cart") ?? new List<int>();
+            // Παίρνουμε το cart από το session (Dictionary<int,int>)
+            var cartJson = HttpContext.Session.GetString("Cart");
 
-            if (!cart.Contains(id))
+            Dictionary<int, int> cart;
+            try
             {
-                cart.Add(id);
-                HttpContext.Session.SetObjectAsJson("Cart", cart);
+                cart = string.IsNullOrEmpty(cartJson)
+                    ? new Dictionary<int, int>()
+                    : JsonConvert.DeserializeObject<Dictionary<int, int>>(cartJson);
             }
+            catch
+            {
+                // Αν υπάρχει λάθος τύπος στο session, ξεκινάμε νέο dictionary
+                cart = new Dictionary<int, int>();
+            }
+
+            // Προσθέτουμε ή αυξάνουμε την ποσότητα
+            if (cart.ContainsKey(id))
+            {
+                cart[id] += quantity;
+            }
+            else
+            {
+                cart[id] = quantity;
+            }
+
+            // Αποθηκεύουμε ξανά στο session
+            HttpContext.Session.SetString("Cart", JsonConvert.SerializeObject(cart));
 
             return RedirectToAction("Details", new { id });
         }
+
+
 
 
         // GET: Products
@@ -476,11 +500,14 @@ namespace OnlineShopUniPi.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public IActionResult RemoveFromCart(int id)
         {
-            var cart = HttpContext.Session.GetObjectFromJson<List<int>>("Cart") ?? new List<int>();
+            // Παίρνουμε το cart από το session (Dictionary<ProductId, Quantity>)
+            var cart = HttpContext.Session.GetObjectFromJson<Dictionary<int, int>>("Cart")
+                       ?? new Dictionary<int, int>();
 
-            if (cart.Contains(id))
+            if (cart.ContainsKey(id))
             {
                 cart.Remove(id);
                 HttpContext.Session.SetObjectAsJson("Cart", cart);
@@ -489,18 +516,68 @@ namespace OnlineShopUniPi.Controllers
             return RedirectToAction("Cart");
         }
 
+
         [HttpGet]
         public async Task<IActionResult> Cart()
         {
-            var cart = HttpContext.Session.GetObjectFromJson<List<int>>("Cart") ?? new List<int>();
+            // Παίρνουμε το cart από το session (Dictionary<ProductId, Quantity>)
+            var cart = HttpContext.Session.GetObjectFromJson<Dictionary<int, int>>("Cart")
+                       ?? new Dictionary<int, int>();
+
+            // Παίρνουμε τα προϊόντα που υπάρχουν στο cart
+            var productIds = cart.Keys.ToList();
 
             var productsInCart = await _context.Products
                 .Include(p => p.ProductImages)
-                .Where(p => cart.Contains(p.ProductId))
+                .Where(p => productIds.Contains(p.ProductId))
                 .ToListAsync();
+
+            // Περνάμε και τις ποσότητες στο ViewBag για το Razor
+            ViewBag.CartQuantities = cart;
 
             return View(productsInCart);
         }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult UpdateCartQuantity([FromBody] CartUpdateModel model)
+        {
+            if (model == null) return BadRequest();
+
+            var cart = HttpContext.Session.GetObjectFromJson<Dictionary<int, int>>("Cart")
+                       ?? new Dictionary<int, int>();
+
+            if (model.Quantity <= 0)
+            {
+                if (cart.ContainsKey(model.ProductId))
+                    cart.Remove(model.ProductId);
+            }
+            else
+            {
+                cart[model.ProductId] = model.Quantity;
+            }
+
+            HttpContext.Session.SetObjectAsJson("Cart", cart);
+
+            // Υπολογισμός συνολικού ποσού
+            var productPrices = _context.Products
+                .Where(p => cart.Keys.Contains(p.ProductId))
+                .ToDictionary(p => p.ProductId, p => p.Price);
+
+            decimal total = cart.Sum(c => productPrices.ContainsKey(c.Key) ? productPrices[c.Key] * c.Value : 0);
+
+            return Json(new { success = true, total = total });
+        }
+
+        // Δημιούργησε το helper model για την λήψη JSON
+        public class CartUpdateModel
+        {
+            public int ProductId { get; set; }
+            public int Quantity { get; set; }
+        }
+
+
+
 
         private bool ProductExists(int id)
         {
