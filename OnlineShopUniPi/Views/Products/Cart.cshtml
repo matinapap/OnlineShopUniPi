@@ -95,10 +95,48 @@ else
 
     <div class="mt-4 text-center">
         <h4>Σύνολο Καλαθιού: €<span id="cartTotal">@Model.Sum(p => (quantities.ContainsKey(p.ProductId) ? quantities[p.ProductId] : 1) * p.Price)</span></h4>
-        <form asp-controller="Orders" asp-action="Checkout" method="post">
-            <button type="submit" class="btn btn-success btn-lg">✅ Ολοκλήρωση Αγοράς</button>
-        </form>
+
+        <!-- Κουμπί ολοκλήρωσης αγοράς -->
+        <button type="button" class="btn btn-success btn-lg" data-bs-toggle="modal" data-bs-target="#checkoutModal">
+            ✅ Ολοκλήρωση Αγοράς
+        </button>
     </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="checkoutModal" tabindex="-1" aria-labelledby="checkoutModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="checkoutModalLabel">Επιβεβαίωση Ολοκλήρωσης Αγοράς</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Τα στοιχεία παράδοσης θα είναι αυτά που έχεις καταχωρήσει στον λογαριασμό σου.</p>
+                    <p>Παρακαλώ εισήγαγε τα στοιχεία της κάρτας σου για την πληρωμή.</p>
+                    <form id="checkoutForm" asp-controller="Orders" asp-action="Checkout" method="post">
+                        @Html.AntiForgeryToken()
+                        <div class="mb-3">
+                            <label for="cardNumber" class="form-label">Αριθμός Κάρτας</label>
+                            <input type="text" class="form-control" id="cardNumber" name="CardNumber" required placeholder="1234 5678 9012 3456" />
+                        </div>
+                        <div class="mb-3">
+                            <label for="expiry" class="form-label">Ημερομηνία Λήξης</label>
+                            <input type="text" class="form-control" id="expiry" name="Expiry" required placeholder="MM/YY" />
+                        </div>
+                        <div class="mb-3">
+                            <label for="cvv" class="form-label">CVV</label>
+                            <input type="text" class="form-control" id="cvv" name="CVV" required placeholder="123" />
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Ακύρωση</button>
+                    <button type="submit" class="btn btn-success" form="checkoutForm">✅ Επιβεβαίωση Πληρωμής</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 }
 
 @section Scripts {

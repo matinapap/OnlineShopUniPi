@@ -20,17 +20,10 @@ namespace OnlineShopUniPi.Controllers
             _context = context;
         }
 
-        [HttpGet]
-        public IActionResult Checkout()
-        {
-            return View();
-        }
-
         public IActionResult ThankYou()
         {
             return View();
         }
-
 
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -39,18 +32,53 @@ namespace OnlineShopUniPi.Controllers
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
             var user = await _context.Users.FindAsync(userId);
 
-            var cart = HttpContext.Session.GetObjectFromJson<List<int>>("Cart") ?? new List<int>();
+            // Πλέον χρησιμοποιούμε Dictionary<int,int> για να κρατάει ποσότητες
+            var cart = HttpContext.Session.GetObjectFromJson<Dictionary<int, int>>("Cart")
+                       ?? new Dictionary<int, int>();
+
             if (!cart.Any())
             {
                 TempData["Error"] = "Το καλάθι είναι άδειο.";
-                return RedirectToAction("Cart", "Product");
+                return RedirectToAction("Cart", "Products");
             }
 
+            var productIds = cart.Keys.ToList();
             var products = await _context.Products
-                .Where(p => cart.Contains(p.ProductId))
+                .Where(p => productIds.Contains(p.ProductId))
                 .ToListAsync();
 
-            var total = products.Sum(p => p.Price);
+            if (products.Count != productIds.Count)
+            {
+                TempData["Error"] = "Κάποια προϊόντα δεν είναι διαθέσιμα.";
+                return RedirectToAction("Cart", "Products");
+            }
+
+            decimal total = 0;
+            var orderItems = new List<OrderItem>();
+
+            foreach (var product in products)
+            {
+                var quantity = cart[product.ProductId];
+
+                if (quantity > product.Quantity)
+                {
+                    TempData["Error"] = $"Δεν υπάρχει αρκετό από το προϊόν '{product.Title}'.";
+                    return RedirectToAction("Cart", "Products");
+                }
+
+                // Μείωση αποθέματος
+                product.Quantity -= quantity;
+
+                var lineTotal = product.Price * quantity;
+                total += lineTotal;
+
+                orderItems.Add(new OrderItem
+                {
+                    ProductId = product.ProductId,
+                    Quantity = quantity,
+                    Price = product.Price
+                });
+            }
 
             var order = new Order
             {
@@ -59,37 +87,39 @@ namespace OnlineShopUniPi.Controllers
                 OrderStatus = "Σε επεξεργασία",
                 OrderDate = DateTime.Now,
                 ShippingAddress = $"{user.Address}, {user.City}, {user.Country}",
-                OrderItems = new List<OrderItem>(),
+                OrderItems = orderItems,
                 Transactions = new List<Transaction>()
             };
-
-            foreach (var product in products)
-            {
-                order.OrderItems.Add(new OrderItem
-                {
-                    ProductId = product.ProductId,
-                    Quantity = 1,
-                    Price = product.Price
-                });
-            }
 
             var transaction = new Transaction
             {
                 Amount = total,
                 PaymentMethod = paymentMethod,
                 TransactionStatus = "Ολοκληρώθηκε",
-                TransactionDate = DateTime.Now
+                TransactionDate = DateTime.Now,
+                Order = order
             };
 
             order.Transactions.Add(transaction);
 
-            _context.Orders.Add(order);
-            await _context.SaveChangesAsync();
+            try
+            {
+                _context.Orders.Add(order);
+                await _context.SaveChangesAsync();
 
-            HttpContext.Session.Remove("Cart");
+                HttpContext.Session.Remove("Cart");
 
-            return RedirectToAction("ThankYou");
+                return RedirectToAction("ThankYou");
+            }
+            catch (Exception ex)
+            {
+                // Logging
+                Console.WriteLine($"Σφάλμα στην ολοκλήρωση παραγγελίας: {ex.Message}");
+                TempData["Error"] = "Υπήρξε σφάλμα κατά την ολοκλήρωση της παραγγελίας. Δοκίμασε ξανά.";
+                return RedirectToAction("Cart", "Products");
+            }
         }
+
 
 
         // GET: Orders
