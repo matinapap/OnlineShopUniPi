@@ -58,6 +58,24 @@
                     </div>
 
                     <div class="mb-3">
+                        <label asp-for="Quantity" class="form-label fw-bold"></label>
+                        <input asp-for="Quantity" class="form-control rounded-pill" type="number" min="1" />
+                        <span asp-validation-for="Quantity" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Size" class="form-label fw-bold"></label>
+                        <select asp-for="Size" class="form-select rounded-pill">
+                            <option value="">-- Επιλέξτε μέγεθος --</option>
+                            <option value="Small" selected="@(Model.Size == "Small")">Small</option>
+                            <option value="Medium" selected="@(Model.Size == "Medium")">Medium</option>
+                            <option value="Large" selected="@(Model.Size == "Large")">Large</option>
+                        </select>
+                        <span asp-validation-for="Size" class="text-danger"></span>
+                    </div>
+
+
+                    <div class="mb-3">
                         <label asp-for="Price" class="form-label fw-bold"></label>
                         <input asp-for="Price" class="form-control rounded-pill" />
                         <span asp-validation-for="Price" class="text-danger"></span>

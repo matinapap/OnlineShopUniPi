@@ -185,7 +185,7 @@ namespace OnlineShopUniPi.Controllers
         // POST: Products/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("ProductId,Title,Description,Gender,Category,Price,Condition")] Product product, IFormFile ?MainImage, List<IFormFile> ?AdditionalImages)
+        public async Task<IActionResult> Create([Bind("ProductId,Title,Description,Gender,Category,Quantity,Size,Price,Condition")] Product product, IFormFile ?MainImage, List<IFormFile> ?AdditionalImages)
         {
             var userIdValue = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
@@ -297,7 +297,7 @@ namespace OnlineShopUniPi.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("ProductId,Title,Description,Gender,Category,Price,Condition")] Product product, IFormFile ?MainImage, List<IFormFile> ?AdditionalImages)
+        public async Task<IActionResult> Edit(int id, [Bind("ProductId,Title,Description,Gender,Category,Quantity,Size,Price,Condition")] Product product, IFormFile ?MainImage, List<IFormFile> ?AdditionalImages)
         {
             if (id != product.ProductId)
             {
@@ -335,6 +335,8 @@ namespace OnlineShopUniPi.Controllers
             existingProduct.Description = product.Description;
             existingProduct.Gender = product.Gender;
             existingProduct.Category = product.Category;
+            existingProduct.Quantity = product.Quantity;
+            existingProduct.Size = product.Size;
             existingProduct.Price = product.Price;
             existingProduct.Condition = product.Condition;
             existingProduct.UserId = userId;
