@@ -1,0 +1,61 @@
+﻿@model List<OnlineShopUniPi.Models.Order>
+@{
+    ViewData["Title"] = "Οι Παραγγελίες Μου";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-5">
+    <h2 class="mb-4">Οι Παραγγελίες Μου</h2>
+
+    @if (!Model.Any())
+    {
+        <p class="text-muted">Δεν υπάρχουν παραγγελίες.</p>
+    }
+    else
+    {
+        <div class="row row-cols-1 row-cols-md-2 g-4">
+            @foreach (var order in Model)
+            {
+                <div class="col">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body">
+                            @* <h5 class="card-title">@order.Product.Title</h5> *@
+                            @* <p class="card-text">@order.Product.Description</p> *@
+                            <p class="card-text"><strong>Κατάσταση:</strong> @order.OrderStatus</p>
+                            <p class="card-text"><strong>Ημερομηνία:</strong> @order.OrderDate</p>
+
+                            @if (order.OrderStatus == "Pending")
+                            {
+                                <button class="btn btn-success btn-sm me-2" onclick="updateOrderStatus(@order.OrderId, 'accept')">Accept</button>
+                                <button class="btn btn-danger btn-sm" onclick="updateOrderStatus(@order.OrderId, 'decline')">Decline</button>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        function updateOrderStatus(orderId, action) {
+            fetch(`/Orders/${action === 'accept' ? 'AcceptOrder' : 'DeclineOrder'}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                },
+                body: JSON.stringify({ id: orderId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert("Σφάλμα κατά την ενημέρωση παραγγελίας.");
+                }
+            });
+        }
+    </script>
+}

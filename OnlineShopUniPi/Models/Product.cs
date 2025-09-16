@@ -44,6 +44,14 @@ public partial class Product
     [Column("created_at", TypeName = "datetime")]
     public DateTime? CreatedAt { get; set; }
 
+    [Column("quantity")]
+    public int Quantity { get; set; }
+
+    [Column("size")]
+    [StringLength(20)]
+    [Unicode(false)]
+    public string? Size { get; set; }  // Small, Medium, Large
+
     [InverseProperty("Product")]
     public virtual ICollection<Favorite> Favorites { get; set; } = new List<Favorite>();
 
