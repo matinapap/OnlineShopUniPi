@@ -73,9 +73,10 @@ namespace OnlineShopUniPi.Controllers
             try
             {
                 IQueryable<Product> query = _context.Products
-                    .Include(p => p.User);
+                    .Include(p => p.User)
+                    .Where(p => p.Quantity >= 1); // 👈 μόνο προϊόντα με stock
 
-                // Αν έχει δοθεί συγκεκριμένο ProductId, φιλτράρουμε
+                // Αν έχει δοθεί συγκεκριμένο ProductId, φιλτράρουμε κι άλλο
                 if (productId.HasValue)
                 {
                     query = query.Where(p => p.ProductId == productId.Value);
@@ -90,6 +91,7 @@ namespace OnlineShopUniPi.Controllers
                 return View(new List<Product>());
             }
         }
+
 
         [Authorize]
         [HttpPost]
@@ -127,18 +129,21 @@ namespace OnlineShopUniPi.Controllers
         {
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
 
+            // Λαμβάνουμε τα ProductId των αγαπημένων του χρήστη
             var favoriteProductIds = await _context.Favorites
                 .Where(f => f.UserId == userId)
                 .Select(f => f.ProductId)
                 .ToListAsync();
 
+            // Παίρνουμε μόνο προϊόντα με Quantity >= 1
             var favoriteProducts = await _context.Products
                 .Include(p => p.ProductImages)
-                .Where(p => favoriteProductIds.Contains(p.ProductId))
+                .Where(p => favoriteProductIds.Contains(p.ProductId) && p.Quantity >= 1)
                 .ToListAsync();
 
             return View(favoriteProducts);
         }
+
 
         [Authorize]
         public async Task<IActionResult> GetProducts()
@@ -529,7 +534,7 @@ namespace OnlineShopUniPi.Controllers
 
             var productsInCart = await _context.Products
                 .Include(p => p.ProductImages)
-                .Where(p => productIds.Contains(p.ProductId))
+                .Where(p => productIds.Contains(p.ProductId) && p.Quantity >= 1)
                 .ToListAsync();
 
             // Περνάμε και τις ποσότητες στο ViewBag για το Razor

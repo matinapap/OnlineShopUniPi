@@ -15,7 +15,7 @@
     {
         <section class="section">
             <div class="products">
-                @foreach (var item in topFavorites)
+                @foreach (var item in topFavorites.Where(p => p.Quantity >= 1))
                 {
                     var mainImage = item.ProductImages?.FirstOrDefault(img => img.IsMainImage == true)?.ImageUrl
                     ?? "~/images/resources/no_image.png";
@@ -31,7 +31,6 @@
             </div>
         </section>
     }
-
 </section>
 
 <section class="section">
