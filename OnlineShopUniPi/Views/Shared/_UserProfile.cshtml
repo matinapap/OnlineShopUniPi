@@ -1,6 +1,8 @@
 ﻿@using System.Security.Claims
 @inject OnlineShopUniPi.Models.OnlineStoreDBContext _context
 
+<!-- Partial View in order to show profile picture on the header -->
+
 @{
     string profilePicUrl = Url.Content("~/images/resources/user_profile.png");
     string? username = null;
