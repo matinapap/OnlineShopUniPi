@@ -1,0 +1,87 @@
+﻿@model List<OnlineShopUniPi.Models.Order>
+@{
+    ViewData["Title"] = "My Purchases";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var filter = Context.Request.Query["filter"].ToString();
+    if (string.IsNullOrEmpty(filter))
+    {
+        filter = "Pending"; // default
+    }
+
+    var pendingPurchases = Model?.Where(o => o.OrderStatus == "Processing").ToList() ?? new List<OnlineShopUniPi.Models.Order>();
+    var historyPurchases = Model?.Where(o => o.OrderStatus != "Processing").ToList() ?? new List<OnlineShopUniPi.Models.Order>();
+
+    var purchasesToShow = filter == "History" ? historyPurchases : pendingPurchases;
+}
+
+<div class="container mt-5">
+    <h2 class="mb-4">My Purchases</h2>
+
+    <!-- Filter dropdown -->
+    <div class="mb-4">
+        <label for="purchaseFilter" class="form-label">Filter:</label>
+        <select id="purchaseFilter" class="form-select" style="width:200px;">
+            <option value="Pending" selected="@(filter == "Pending")">Pending</option>
+            <option value="History" selected="@(filter == "History")">History</option>
+        </select>
+    </div>
+
+    @if (!purchasesToShow.Any())
+    {
+        <p class="text-muted">No purchases found.</p>
+    }
+    else
+    {
+        @foreach (var order in purchasesToShow)
+        {
+            <div class="card mb-4 shadow-sm">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>Order Number:</strong> @order.OrderId
+                        <br />
+                        <strong>Date:</strong> @(order.OrderDate?.ToString("dd/MM/yyyy HH:mm") ?? "-")
+                    </div>
+                    <div>
+                        <strong>Status:</strong>
+                        <span>@order.OrderStatus</span>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <div class="row">
+                        @foreach (var item in order.OrderItems ?? Enumerable.Empty<OnlineShopUniPi.Models.OrderItem>())
+                        {
+                            var mainImage = item.Product?.ProductImages
+                            ?.FirstOrDefault(img => img.IsMainImage == true)?.ImageUrl
+                            ?? item.Product?.ProductImages?.FirstOrDefault()?.ImageUrl
+                            ?? "~/images/resources/no_image.png";
+
+                            <div class="col-md-4 mb-3">
+                                <div class="card h-100">
+                                    <img src="@Url.Content("~/" + mainImage.TrimStart('/'))" class="card-img-top" style="height:200px; object-fit:contain;" />
+                                    <div class="card-body">
+                                        <h5 class="card-title">@item.Product?.Title</h5>
+                                        <p class="card-text">Price: €@item.Price</p>
+                                        <p class="card-text">Quantity: @item.Quantity</p>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                    <h5>Total: €@order.TotalPrice</h5>
+                </div>
+            </div>
+        }
+    }
+</div>
+
+@section Scripts {
+    <script>
+        // Filter change
+        document.getElementById('purchaseFilter')?.addEventListener('change', function () {
+            const filter = this.value;
+            window.location.href = `/Orders/MyPurchases?filter=${filter}`;
+        });
+    </script>
+}

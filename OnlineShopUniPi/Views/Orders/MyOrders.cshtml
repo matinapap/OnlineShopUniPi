@@ -1,61 +1,128 @@
 ﻿@model List<OnlineShopUniPi.Models.Order>
 @{
-    ViewData["Title"] = "Οι Παραγγελίες Μου";
+    ViewData["Title"] = "My Orders";
     Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var filter = Context.Request.Query["filter"].ToString();
+    if (string.IsNullOrEmpty(filter))
+    {
+        filter = "Pending"; // default
+    }
+
+    var pendingOrders = Model?.Where(o => o.OrderStatus == "Processing").ToList() ?? new List<OnlineShopUniPi.Models.Order>();
+    var historyOrders = Model?.Where(o => o.OrderStatus != "Processing").ToList() ?? new List<OnlineShopUniPi.Models.Order>();
+
+    var ordersToShow = filter == "History" ? historyOrders : pendingOrders;
 }
 
 <div class="container mt-5">
-    <h2 class="mb-4">Οι Παραγγελίες Μου</h2>
+    <h2 class="mb-4">My Orders</h2>
 
-    @if (!Model.Any())
+    <!-- Filter dropdown -->
+    <div class="mb-4">
+        <label for="orderFilter" class="form-label">Filter:</label>
+        <select id="orderFilter" class="form-select" style="width:200px;">
+            <option value="Pending" selected="@(filter == "Pending")">Pending</option>
+            <option value="History" selected="@(filter == "History")">History</option>
+        </select>
+    </div>
+
+    @if (!ordersToShow.Any())
     {
-        <p class="text-muted">Δεν υπάρχουν παραγγελίες.</p>
+        <p class="text-muted">No orders found.</p>
     }
     else
     {
-        <div class="row row-cols-1 row-cols-md-2 g-4">
-            @foreach (var order in Model)
-            {
-                <div class="col">
-                    <div class="card h-100 border-0 shadow-sm">
-                        <div class="card-body">
-                            @* <h5 class="card-title">@order.Product.Title</h5> *@
-                            @* <p class="card-text">@order.Product.Description</p> *@
-                            <p class="card-text"><strong>Κατάσταση:</strong> @order.OrderStatus</p>
-                            <p class="card-text"><strong>Ημερομηνία:</strong> @order.OrderDate</p>
-
-                            @if (order.OrderStatus == "Pending")
-                            {
-                                <button class="btn btn-success btn-sm me-2" onclick="updateOrderStatus(@order.OrderId, 'accept')">Accept</button>
-                                <button class="btn btn-danger btn-sm" onclick="updateOrderStatus(@order.OrderId, 'decline')">Decline</button>
-                            }
-                        </div>
+        @foreach (var order in ordersToShow)
+        {
+            <div class="card mb-4 shadow-sm">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>Order Number:</strong> @order.OrderId
+                        <br />
+                        <strong>Date:</strong> @(order.OrderDate?.ToString("dd/MM/yyyy HH:mm") ?? "-")
+                    </div>
+                    <div>
+                        <strong>Status:</strong>
+                        @if (order.OrderStatus == "Processing")
+                        {
+                            <select class="form-select d-inline-block w-auto order-status-select"
+                                    data-order-id="@order.OrderId">
+                                <option value="Processing" selected>Processing</option>
+                                <option value="Completed">Completed</option>
+                                <option value="Cancelled">Cancelled</option>
+                            </select>
+                        }
+                        else
+                        {
+                            <span>@order.OrderStatus</span>
+                        }
                     </div>
                 </div>
-            }
-        </div>
+
+                <div class="card-body">
+                    <div class="row">
+                        @foreach (var item in order.OrderItems ?? Enumerable.Empty<OnlineShopUniPi.Models.OrderItem>())
+                        {
+                            var mainImage = item.Product?.ProductImages
+                            ?.FirstOrDefault(img => img.IsMainImage == true)?.ImageUrl
+                            ?? item.Product?.ProductImages?.FirstOrDefault()?.ImageUrl
+                            ?? "~/images/resources/no_image.png";
+
+                            <div class="col-md-4 mb-3">
+                                <div class="card h-100">
+                                    <img src="@Url.Content("~/" + mainImage.TrimStart('/'))" class="card-img-top" style="height:200px; object-fit:contain;" />
+                                    <div class="card-body">
+                                        <h5 class="card-title">@item.Product?.Title</h5>
+                                        <p class="card-text">Price: €@item.Price</p>
+                                        <p class="card-text">Quantity: @item.Quantity</p>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                    <h5>Total: €@order.TotalPrice</h5>
+                </div>
+            </div>
+        }
     }
 </div>
 
 @section Scripts {
     <script>
-        function updateOrderStatus(orderId, action) {
-            fetch(`/Orders/${action === 'accept' ? 'AcceptOrder' : 'DeclineOrder'}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
-                },
-                body: JSON.stringify({ id: orderId })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    location.reload();
-                } else {
-                    alert("Σφάλμα κατά την ενημέρωση παραγγελίας.");
+        // Filter change
+        document.getElementById('orderFilter')?.addEventListener('change', function () {
+            const filter = this.value;
+            window.location.href = `/Orders/MyOrders?filter=${filter}`;
+        });
+
+        // Order status change
+        document.querySelectorAll('.order-status-select').forEach(function (select) {
+            select.addEventListener('change', async function () {
+                const orderId = parseInt(this.dataset.orderId);
+                const status = this.value;
+
+                try {
+                    const response = await fetch('/Orders/UpdateOrderStatus', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
+                        },
+                        body: JSON.stringify({ OrderId: orderId, Status: status })
+                    });
+
+                    const data = await response.json();
+                    if (data.success) {
+                        location.reload(); // reload για να πάει στο History
+                    } else {
+                        alert('Error updating order: ' + (data.message || ''));
+                    }
+                } catch (err) {
+                    console.error(err);
+                    alert('Error updating order.');
                 }
             });
-        }
+        });
     </script>
 }

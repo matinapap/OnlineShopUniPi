@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
+using System.Text.Json;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -24,6 +26,104 @@ namespace OnlineShopUniPi.Controllers
         {
             return View();
         }
+
+        [Authorize]
+        public async Task<IActionResult> MyOrders(string filter = "Pending")
+        {
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+            var ordersQuery = _context.Orders
+                .Include(o => o.OrderItems)
+                    .ThenInclude(oi => oi.Product)
+                        .ThenInclude(p => p.ProductImages)
+                .Where(o => o.UserId == userId);
+
+            if (filter == "Pending")
+            {
+                // Φέρνουμε μόνο τις παραγγελίες που είναι "Processing"
+                ordersQuery = ordersQuery.Where(o => o.OrderStatus == "Processing");
+            }
+            else if (filter == "History")
+            {
+                // Φέρνουμε όλες τις υπόλοιπες παραγγελίες (Completed, Canceled)
+                ordersQuery = ordersQuery.Where(o => o.OrderStatus != "Processing");
+            }
+
+            var orders = await ordersQuery
+                .OrderByDescending(o => o.OrderDate)
+                .ToListAsync();
+
+            ViewBag.Filter = filter;
+
+            return View(orders);
+        }
+
+        [Authorize]
+        public async Task<IActionResult> MyPurchases(string filter = "Pending")
+        {
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+            var purchasesQuery = _context.Orders
+                .Include(o => o.OrderItems)
+                    .ThenInclude(oi => oi.Product)
+                        .ThenInclude(p => p.ProductImages)
+                .Where(o => o.UserId == userId) // αγορές του χρήστη
+                .Where(o => o.OrderItems.Any(oi => oi.Product.UserId != userId)); // μόνο προϊόντα άλλων χρηστών
+
+            if (filter == "Pending")
+            {
+                purchasesQuery = purchasesQuery.Where(o => o.OrderStatus == "Processing");
+            }
+            else if (filter == "History")
+            {
+                purchasesQuery = purchasesQuery.Where(o => o.OrderStatus != "Processing");
+            }
+
+            var purchases = await purchasesQuery
+                .OrderByDescending(o => o.OrderDate)
+                .ToListAsync();
+
+            ViewBag.Filter = filter;
+
+            return View(purchases);
+        }
+
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateOrderStatus([FromBody] JsonElement data)
+        {
+            try
+            {
+                if (!data.TryGetProperty("OrderId", out var orderIdProp) ||
+                    !data.TryGetProperty("Status", out var statusProp))
+                {
+                    return Json(new { success = false, message = "Invalid data." });
+                }
+
+                int orderId = orderIdProp.GetInt32();
+                string status = statusProp.GetString();
+
+                var order = await _context.Orders.FindAsync(orderId);
+                if (order == null)
+                {
+                    return Json(new { success = false, message = "Order not found." });
+                }
+
+                order.OrderStatus = status;
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+
+
+
 
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -84,7 +184,7 @@ namespace OnlineShopUniPi.Controllers
             {
                 UserId = userId,
                 TotalPrice = total,
-                OrderStatus = "Σε επεξεργασία",
+                OrderStatus = "Processing", // Αλλαγή από "Σε επεξεργασία" σε "Processing"
                 OrderDate = DateTime.Now,
                 ShippingAddress = $"{user.Address}, {user.City}, {user.Country}",
                 OrderItems = orderItems,
@@ -95,7 +195,7 @@ namespace OnlineShopUniPi.Controllers
             {
                 Amount = total,
                 PaymentMethod = paymentMethod,
-                TransactionStatus = "Ολοκληρώθηκε",
+                TransactionStatus = "Completed", // Αλλαγή από "Ολοκληρώθηκε" σε "Completed"
                 TransactionDate = DateTime.Now,
                 Order = order
             };
