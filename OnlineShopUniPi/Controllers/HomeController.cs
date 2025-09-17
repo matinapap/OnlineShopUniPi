@@ -1,7 +1,5 @@
 ﻿using System.Diagnostics;
-using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using OnlineShopUniPi.Models;
@@ -21,26 +19,37 @@ namespace OnlineShopUniPi.Controllers
             _webHostEnvironment = webHostEnvironment;
         }
 
+        // Algorythm to get the top 10 most favorited products
         public async Task<IActionResult> Index()
         {
+            // Fetch top 10 most favorited products
             var topFavoritedProducts = await _context.Products
-                .Where(p => p.Favorites.Any())
-                .OrderByDescending(p => p.Favorites.Count)
+                .Include(p => p.ProductImages) // Load product images
+                .Where(p => p.Favorites.Any()) // Only products with at least one favorite
+                .OrderByDescending(p => p.Favorites.Count) // Most favorited first
                 .Take(10)
-                .Include(p => p.ProductImages)
                 .ToListAsync();
 
             ViewBag.TopFavorited = topFavoritedProducts;
 
+            // Fetch latest 10 products (from all categories)
+            var latestProducts = await _context.Products
+                .Include(p => p.ProductImages)
+                .OrderByDescending(p => p.CreatedAt) 
+                .Take(10)
+                .ToListAsync();
+
+            ViewBag.LatestProducts = latestProducts;
+
             return View();
         }
 
-
+        // Returns clothing page filtered by gender and category
         [HttpGet]
         public async Task<IActionResult> ClothingPage(string gender = "Women", string category = null)
         {
             var productsQuery = _context.Products
-                .Include(p => p.ProductImages) // Για να φορτώνονται και οι εικόνες
+                .Include(p => p.ProductImages) // loads images
                 .AsQueryable();
 
             if (!string.IsNullOrEmpty(gender))
@@ -54,6 +63,7 @@ namespace OnlineShopUniPi.Controllers
             ViewBag.SelectedGender = gender;
             ViewBag.SelectedCategory = category;
 
+            // Get favorite product IDs for the logged-in user
             if (User.Identity.IsAuthenticated)
             {
                 var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
@@ -71,7 +81,6 @@ namespace OnlineShopUniPi.Controllers
 
             return View(products);
         }
-
 
 
         public IActionResult Privacy()

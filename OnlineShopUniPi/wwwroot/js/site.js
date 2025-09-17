@@ -3,6 +3,8 @@
 
 // Write your JavaScript code.
 
+// ####################### Login/Signup Toggle #######################
+
 document.addEventListener('DOMContentLoaded', function () {
     const loginBtn = document.getElementById('loginBtn');
     const signupBtn = document.getElementById('signupBtn');
@@ -33,6 +35,7 @@ document.addEventListener('DOMContentLoaded', function () {
     initializeCountryCitySelect();
 });
 
+// fetches countries and cities from API and populates the selects
 async function initializeCountryCitySelect() {
     const countrySelect = document.getElementById('countrySelect');
     const citySelect = document.getElementById('citySelect');
@@ -64,6 +67,7 @@ async function initializeCountryCitySelect() {
     }
 }
 
+// loads cities for a given country and populates the city select
 async function loadCities(country, citySelect) {
     if (!country || !citySelect) return;
 
@@ -93,14 +97,13 @@ async function loadCities(country, citySelect) {
     }
 }
 
+// using Regex to validate fields
 function validateFields() {
     const firstName = document.getElementById('FirstName').value.trim();
     const lastName = document.getElementById('LastName').value.trim();
     const username = document.getElementById('Username').value.trim();
     const email = document.getElementById('Email').value.trim();
     const phoneNumber = document.getElementById('PhoneNumber').value.trim();
-    const city = document.getElementById('citySelect').value;
-    const address = document.getElementById('Address').value.trim();
     const password = document.getElementById('PasswordHash').value;
     const confirmPassword = document.getElementById('ConfirmPassword').value;
 
@@ -135,10 +138,10 @@ function validateFields() {
         return false;
     }
 
-    //if (!passwordRegex.test(password)) {
-    //    alert("Ο κωδικός πρέπει να περιέχει τουλάχιστον 8 χαρακτήρες, έναν κεφαλαίο και έναν αριθμό.");
-    //    return false;
-    //}
+    if (!passwordRegex.test(password)) {
+        alert("Ο κωδικός πρέπει να περιέχει τουλάχιστον 8 χαρακτήρες, έναν κεφαλαίο και έναν αριθμό.");
+        return false;
+    }
 
     if (password !== confirmPassword) {
         alert("Οι κωδικοί δεν ταιριάζουν.");
@@ -146,4 +149,46 @@ function validateFields() {
     }
 
     return true;
+}
+
+// ####################### Retrieves the ASP.NET Core anti-forgery token from the hidden form #######################
+
+function getAntiForgeryToken() {
+    const tokenInput = document.querySelector('#antiForgeryForm input[name="__RequestVerificationToken"]');
+    return tokenInput ? tokenInput.value : '';
+}
+
+// ####################### Home/Layout Favourites #######################
+
+function toggleHeart(button, event) {
+    event.preventDefault();
+
+    const icon = button.querySelector('i');
+    const productId = parseInt(button.getAttribute('data-product-id'));
+
+    fetch('/Products/Favorites', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'RequestVerificationToken': getAntiForgeryToken()
+        },
+        body: JSON.stringify({ productId: productId })
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                if (icon.classList.contains('bi-heart')) {
+                    icon.classList.remove('bi-heart');
+                    icon.classList.add('bi-heart-fill');
+                    icon.style.color = 'red';
+                } else {
+                    icon.classList.remove('bi-heart-fill');
+                    icon.classList.add('bi-heart');
+                    icon.style.color = '';
+                }
+            } else {
+                alert('Προέκυψε πρόβλημα.');
+            }
+        })
+        .catch(() => alert('Προέκυψε σφάλμα στο αίτημα.'));
 }

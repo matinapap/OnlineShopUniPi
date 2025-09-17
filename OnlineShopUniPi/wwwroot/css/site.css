@@ -42,16 +42,25 @@ header {
     z-index: 100;
 }
 
+.main-header .logo a {
+    color: white; 
+    text-decoration: none;
+}
+
+    .main-header .logo a:hover {
+        color: #B0B0B0;
+    }
+
+
 .logo {
     font-size: 28px;
     font-weight: bold;
-    color: #d4af37;
+    color: #ffffff;
 }
 
 .nav-links {
     display: flex;
     gap: 20px;
-    flex-direction: row;
 }
 
     .nav-links li a {
@@ -61,7 +70,7 @@ header {
     }
 
         .nav-links li a:hover {
-            color: #d4af37;
+            color: #606060;
         }
 
 .profile, .profile-link {
@@ -88,14 +97,32 @@ header {
 
 /* === Hero Section === */
 .hero-section {
-    background: linear-gradient(to right, #333, #111);
-    color: white; /* Αυτό επηρεάζει μόνο το <p> */
+    background: url('/images/resources/main_models_image.png') center center / cover no-repeat;
+    color: white;
     padding: 60px 20px;
     text-align: center;
+    position: relative;
 }
 
+    .hero-section::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1;
+    }
+
+    .hero-section h1,
+    .hero-section p,
+    .hero-section .cta-button {
+        position: relative;
+        z-index: 2;
+    }
+
     .hero-section h1 {
-        color: white !important; /* Εξασφαλίζει ότι θα παραμείνει λευκό */
         font-size: 36px;
         margin-bottom: 10px;
     }
@@ -106,7 +133,7 @@ header {
     }
 
 .cta-button {
-    background-color: #d4af37;
+    background-color: #ffffff;
     color: #1f1f1f;
     padding: 12px 24px;
     font-weight: bold;
@@ -115,7 +142,7 @@ header {
 }
 
     .cta-button:hover {
-        background-color: #bfa133;
+        background-color: #B0B0B0;
     }
 
 /* === Section === */
@@ -161,7 +188,7 @@ header {
     justify-content: center;
     gap: 20px;
     flex-wrap: wrap;
-    padding: 20px;
+    padding: 10px;
 }
 
 .product-card {
@@ -173,7 +200,6 @@ header {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
     transition: all 0.3s ease;
     border: 1px solid #eaeaea;
-    margin-bottom: 20px;
     position: relative;
     overflow: hidden;
 }
@@ -226,7 +252,7 @@ header {
         .product-card .price,
         .product-card .card-text:nth-of-type(3) {
             font-weight: bold;
-            color: #d4af37;
+            color: #707070;
             font-size: 20px;
             margin: 15px 0;
         }
@@ -249,7 +275,6 @@ header {
         flex: 1;
     }
 
-/* === Product Card Hover Effects === */
 .hover-effect {
     transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
@@ -295,12 +320,12 @@ header {
 }
 
 .btn-outline-primary {
-    border-color: #4a6baf;
-    color: #4a6baf;
+    border-color: #606060;
+    color: #606060;
 }
 
     .btn-outline-primary:hover {
-        background-color: #4a6baf;
+        background-color: #606060;
         color: white;
     }
 
@@ -328,7 +353,7 @@ header {
 
 .cart-btn {
     margin-top: 8px;
-    background-color: #d4af37;
+    background-color: #707070;
     color: #1f1f1f;
     padding: 8px 16px;
     font-weight: bold;
@@ -377,7 +402,7 @@ header {
 /* === No products message === */
 .alert-info {
     background-color: #e7f5ff;
-    color: #1864ab;
+    color: #B0B0B0;
     border-color: #a5d8ff;
     padding: 15px;
     border-radius: 8px;
@@ -388,7 +413,7 @@ header {
 
 /* === Page title === */
 h1 {
-    color: #333;
+    color: #ffffff;
     font-weight: 700;
     margin-bottom: 30px;
     font-size: 2.2rem;
@@ -454,17 +479,12 @@ footer {
     }
 
         .social-icons a:hover {
-            color: #d4af37;
+            color: #c34ca7;
         }
 
 .copyright {
     color: #bbb;
     font-size: 14px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 10px;
-    width: 100%;
     text-align: center;
     margin-top: 20px;
     flex-wrap: wrap;
@@ -673,5 +693,4 @@ footer {
         flex-direction: column;
         gap: 5px;
     }
-
 }

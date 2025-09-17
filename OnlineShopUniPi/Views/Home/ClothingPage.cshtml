@@ -9,7 +9,7 @@
     var favoriteProductIds = ViewBag.FavoriteProductIds as List<int> ?? new List<int>();
 }
 
-<!-- Κρυφό φόρμακι για το CSRF token -->
+<!-- Hidden form used only to store the CSRF (anti-forgery) token, so it can be retrieved via JavaScript when making AJAX requests. -->
 <form id="antiForgeryForm" style="display:none;">
     @Html.AntiForgeryToken()
 </form>
@@ -17,7 +17,7 @@
 <div class="container mt-5">
     <!-- Gender Filter -->
     <div class="section text-center mb-4">
-        <h2 class="mb-3">Φύλο</h2>
+        <h2 class="mb-3">Gender</h2>
         <div class="btn-group" role="group">
             <a asp-action="ClothingPage" asp-route-gender="Women" class="btn btn-outline-primary @(selectedGender == "Women" ? "active" : "")">Women</a>
             <a asp-action="ClothingPage" asp-route-gender="Men" class="btn btn-outline-primary @(selectedGender == "Men" ? "active" : "")">Men</a>
@@ -26,7 +26,7 @@
 
     <!-- Category Filter -->
     <div class="section text-center mb-5">
-        <h2 class="mb-3">Κατηγορίες</h2>
+        <h2 class="mb-3">Categories</h2>
         <div class="d-flex flex-wrap justify-content-center gap-2">
             @{
                 var categories = selectedGender == "Women"
@@ -48,11 +48,11 @@
 
     <!-- Products -->
     <div class="section">
-        <h2 class="mb-4 text-center">Προϊόντα</h2>
+        <h2 class="mb-4 text-center">Products</h2>
         <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
             @if (!Model.Any())
             {
-                <p class="text-muted text-center">Δεν βρέθηκαν προϊόντα για αυτή την επιλογή.</p>
+                <p class="text-muted text-center">No products found for this selection.</p>
             }
             else
             {
@@ -101,14 +101,14 @@
                                     <img src="~/images/resources/no_image.png" class="card-img-top p-3 object-fit-contain bg-light" alt="@item.Title" style="height: 200px;">
                                 }
 
-                                <!-- Badge κατάστασης -->
+                                <!-- Status badge -->
                                 <div class="position-absolute top-0 start-0 m-2">
                                     <span class="badge bg-@(item.Condition == "Νέο" ? "success" : "warning") text-dark">
                                         @item.Condition
                                     </span>
                                 </div>
 
-                                <!-- Καρδιά αγαπημένων -->
+                                <!-- Favorites heart -->
                                 @{
                                     var isFavorite = favoriteProductIds.Contains(item.ProductId);
                                 }
@@ -149,45 +149,3 @@
         </div>
     </div>
 </div>
-
-@section Scripts {
-    <script>
-        function getAntiForgeryToken() {
-            const tokenInput = document.querySelector('#antiForgeryForm input[name="__RequestVerificationToken"]');
-            return tokenInput ? tokenInput.value : '';
-        }
-
-        function toggleHeart(button, event) {
-            event.preventDefault();
-
-            const icon = button.querySelector('i');
-            const productId = parseInt(button.getAttribute('data-product-id'));
-
-            fetch('/Products/Favorites', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'RequestVerificationToken': getAntiForgeryToken()
-                },
-                body: JSON.stringify({ productId: productId })  // αντί για "id"
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    if (icon.classList.contains('bi-heart')) {
-                        icon.classList.remove('bi-heart');
-                        icon.classList.add('bi-heart-fill');
-                        icon.style.color = 'red';
-                    } else {
-                        icon.classList.remove('bi-heart-fill');
-                        icon.classList.add('bi-heart');
-                        icon.style.color = '';
-                    }
-                } else {
-                    alert('Προέκυψε πρόβλημα.');
-                }
-            })
-            .catch(() => alert('Προέκυψε σφάλμα στο αίτημα.'));
-        }
-    </script>
-}
