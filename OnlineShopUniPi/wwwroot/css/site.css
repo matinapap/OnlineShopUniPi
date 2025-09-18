@@ -413,11 +413,16 @@ header {
 
 /* === Page title === */
 h1 {
-    color: #ffffff;
+    color: #eee;
     font-weight: 700;
     margin-bottom: 30px;
     font-size: 2.2rem;
 }
+
+.specific-title {
+    color: rgba(0, 0, 0, 0.8);
+}
+
 
 /* === Footer === */
 footer {
@@ -516,7 +521,6 @@ footer {
     .sidebar h1 {
         font-size: 2.5rem;
         margin-bottom: 3rem;
-        color: #d4af37;
     }
 
 .auth-buttons {

@@ -3,37 +3,39 @@
     ViewData["Title"] = "My Purchases";
     Layout = "~/Views/Shared/_Layout.cshtml";
 
-    var filter = Context.Request.Query["filter"].ToString();
-    if (string.IsNullOrEmpty(filter))
-    {
-        filter = "Pending"; // default
-    }
-
-    var pendingPurchases = Model?.Where(o => o.OrderStatus == "Processing").ToList() ?? new List<OnlineShopUniPi.Models.Order>();
-    var historyPurchases = Model?.Where(o => o.OrderStatus != "Processing").ToList() ?? new List<OnlineShopUniPi.Models.Order>();
-
-    var purchasesToShow = filter == "History" ? historyPurchases : pendingPurchases;
+    var filter = ViewBag.Filter as string ?? "Pending";
+    var filters = new List<string> { "Pending", "History" };
 }
 
 <div class="container mt-5">
     <h2 class="mb-4">My Purchases</h2>
 
-    <!-- Filter dropdown -->
+    <!-- Filter Dropdown -->
     <div class="mb-4">
         <label for="purchaseFilter" class="form-label">Filter:</label>
         <select id="purchaseFilter" class="form-select" style="width:200px;">
-            <option value="Pending" selected="@(filter == "Pending")">Pending</option>
-            <option value="History" selected="@(filter == "History")">History</option>
+            @foreach (var f in filters)
+            {
+                if (filter == f)
+                {
+                    <option value="@f" selected>@f</option>
+                }
+                else
+                {
+                    <option value="@f">@f</option>
+                }
+            }
         </select>
     </div>
 
-    @if (!purchasesToShow.Any())
+    <!-- Show all the orders -->
+    @if (!Model.Any())
     {
         <p class="text-muted">No purchases found.</p>
     }
     else
     {
-        @foreach (var order in purchasesToShow)
+        @foreach (var order in Model)
         {
             <div class="card mb-4 shadow-sm">
                 <div class="card-header d-flex justify-content-between align-items-center">
@@ -55,7 +57,7 @@
                             var mainImage = item.Product?.ProductImages
                             ?.FirstOrDefault(img => img.IsMainImage == true)?.ImageUrl
                             ?? item.Product?.ProductImages?.FirstOrDefault()?.ImageUrl
-                            ?? "~/images/resources/no_image.png";
+                            ?? "images/resources/no_image.png";
 
                             <div class="col-md-4 mb-3">
                                 <div class="card h-100">
@@ -75,13 +77,3 @@
         }
     }
 </div>
-
-@section Scripts {
-    <script>
-        // Filter change
-        document.getElementById('purchaseFilter')?.addEventListener('change', function () {
-            const filter = this.value;
-            window.location.href = `/Orders/MyPurchases?filter=${filter}`;
-        });
-    </script>
-}

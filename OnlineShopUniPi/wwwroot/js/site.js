@@ -192,3 +192,47 @@ function toggleHeart(button, event) {
         })
         .catch(() => alert('Προέκυψε σφάλμα στο αίτημα.'));
 }
+
+
+// ####################### Purchases Handling Dropdown #######################
+
+// Purchase Filter
+document.getElementById('orderFilter')?.addEventListener('change', function () {
+    const filter = this.value;
+    window.location.href = `/Orders/MyPurchases?filter=${filter}`;
+});
+
+// ####################### Orders Handling Dropdown #######################
+
+document.getElementById('orderFilter')?.addEventListener('change', function () {
+    const filter = this.value;
+    window.location.href = `/Orders/MyOrders?filter=${filter}`;
+});
+
+document.querySelectorAll('.order-status-select').forEach(function (select) {
+    select.addEventListener('change', async function () {
+        const orderId = parseInt(this.dataset.orderId);
+        const status = this.value;
+
+        try {
+            const response = await fetch('@Url.Action("UpdateOrderStatus", "Orders")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
+                },
+                body: JSON.stringify({ OrderId: orderId, Status: status })
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error updating order: ' + (data.message || ''));
+            }
+        } catch (err) {
+            console.error(err);
+            alert('Error updating order.');
+        }
+    });
+});

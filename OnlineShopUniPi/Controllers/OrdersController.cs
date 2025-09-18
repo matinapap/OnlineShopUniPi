@@ -1,12 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Claims;
+﻿using System.Security.Claims;
 using System.Text.Json;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using OnlineShopUniPi.Helpers;
 using OnlineShopUniPi.Models;
@@ -22,30 +17,42 @@ namespace OnlineShopUniPi.Controllers
             _context = context;
         }
 
-        public IActionResult ThankYou()
+        // Thank you page for a specific order
+        [Authorize]
+        public IActionResult ThankYou(int orderId)
         {
-            return View();
+            // Retrieve order by ID
+            var order = _context.Orders.FirstOrDefault(o => o.OrderId == orderId);
+
+            if (order == null)
+            {
+                return NotFound();
+            }
+
+            // Pass the order to the ThankYou view
+            return View(order);
         }
 
+        // Show orders that belong to the logged-in user's products
         [Authorize]
         public async Task<IActionResult> MyOrders(string filter = "Pending")
         {
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
 
+            // Get all orders that include at least one product owned by this user
             var ordersQuery = _context.Orders
                 .Include(o => o.OrderItems)
                     .ThenInclude(oi => oi.Product)
                         .ThenInclude(p => p.ProductImages)
-                .Where(o => o.UserId == userId);
+                .Where(o => o.OrderItems.Any(oi => oi.Product.UserId == userId));
 
+            // Filter pending vs history
             if (filter == "Pending")
             {
-                // Φέρνουμε μόνο τις παραγγελίες που είναι "Processing"
                 ordersQuery = ordersQuery.Where(o => o.OrderStatus == "Processing");
             }
             else if (filter == "History")
             {
-                // Φέρνουμε όλες τις υπόλοιπες παραγγελίες (Completed, Canceled)
                 ordersQuery = ordersQuery.Where(o => o.OrderStatus != "Processing");
             }
 
@@ -58,39 +65,42 @@ namespace OnlineShopUniPi.Controllers
             return View(orders);
         }
 
+        // Purchases made by the logged-in user
         [Authorize]
         public async Task<IActionResult> MyPurchases(string filter = "Pending")
         {
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
 
+            // Query the user's orders, excluding their own products
             var purchasesQuery = _context.Orders
                 .Include(o => o.OrderItems)
                     .ThenInclude(oi => oi.Product)
                         .ThenInclude(p => p.ProductImages)
-                .Where(o => o.UserId == userId) // αγορές του χρήστη
-                .Where(o => o.OrderItems.Any(oi => oi.Product.UserId != userId)); // μόνο προϊόντα άλλων χρηστών
+                .Where(o => o.UserId == userId)
+                .Where(o => o.OrderItems.Any(oi => oi.Product.UserId != userId));
 
+            // Filter by Pending or History based on order status
             if (filter == "Pending")
-            {
                 purchasesQuery = purchasesQuery.Where(o => o.OrderStatus == "Processing");
-            }
             else if (filter == "History")
-            {
                 purchasesQuery = purchasesQuery.Where(o => o.OrderStatus != "Processing");
-            }
 
+            // Execute query and order by most recent first
             var purchases = await purchasesQuery
                 .OrderByDescending(o => o.OrderDate)
                 .ToListAsync();
 
+            // Store the selected filter in ViewBag for use in the view
             ViewBag.Filter = filter;
 
             return View(purchases);
         }
 
 
+        // Update order status (AJAX call with JSON body)
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize]
         public async Task<IActionResult> UpdateOrderStatus([FromBody] JsonElement data)
         {
             try
@@ -104,12 +114,30 @@ namespace OnlineShopUniPi.Controllers
                 int orderId = orderIdProp.GetInt32();
                 string status = statusProp.GetString();
 
-                var order = await _context.Orders.FindAsync(orderId);
+                // Find order including OrderItems and Product
+                var order = await _context.Orders
+                .Include(o => o.OrderItems)
+                    .ThenInclude(oi => oi.Product)
+                .FirstOrDefaultAsync(o => o.OrderId == orderId);
+
                 if (order == null)
                 {
                     return Json(new { success = false, message = "Order not found." });
                 }
 
+                // If status is being changed to Cancelled, return stock quantities
+                if (status == "Cancelled" && order.OrderStatus != "Cancelled")
+                {
+                    foreach (var item in order.OrderItems)
+                    {
+                        if (item.Product != null)
+                        {
+                            item.Product.Quantity += item.Quantity; // restore stock
+                        }
+                    }
+                }
+
+                // Update order status
                 order.OrderStatus = status;
                 await _context.SaveChangesAsync();
 
@@ -121,18 +149,16 @@ namespace OnlineShopUniPi.Controllers
             }
         }
 
-
-
-
-
+        // Checkout: create order and transaction
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize]
         public async Task<IActionResult> Checkout(string paymentMethod)
         {
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
             var user = await _context.Users.FindAsync(userId);
 
-            // Πλέον χρησιμοποιούμε Dictionary<int,int> για να κρατάει ποσότητες
+            // Get shopping cart from session (productId -> quantity)
             var cart = HttpContext.Session.GetObjectFromJson<Dictionary<int, int>>("Cart")
                        ?? new Dictionary<int, int>();
 
@@ -142,11 +168,13 @@ namespace OnlineShopUniPi.Controllers
                 return RedirectToAction("Cart", "Products");
             }
 
+            // Load products in the cart
             var productIds = cart.Keys.ToList();
             var products = await _context.Products
                 .Where(p => productIds.Contains(p.ProductId))
                 .ToListAsync();
 
+            // Check if all products are still available
             if (products.Count != productIds.Count)
             {
                 TempData["Error"] = "Κάποια προϊόντα δεν είναι διαθέσιμα.";
@@ -156,6 +184,7 @@ namespace OnlineShopUniPi.Controllers
             decimal total = 0;
             var orderItems = new List<OrderItem>();
 
+            // Validate stock and calculate totals
             foreach (var product in products)
             {
                 var quantity = cart[product.ProductId];
@@ -166,7 +195,7 @@ namespace OnlineShopUniPi.Controllers
                     return RedirectToAction("Cart", "Products");
                 }
 
-                // Μείωση αποθέματος
+                // Reduce product stock
                 product.Quantity -= quantity;
 
                 var lineTotal = product.Price * quantity;
@@ -180,22 +209,24 @@ namespace OnlineShopUniPi.Controllers
                 });
             }
 
+            // Create new order
             var order = new Order
             {
                 UserId = userId,
                 TotalPrice = total,
-                OrderStatus = "Processing", // Αλλαγή από "Σε επεξεργασία" σε "Processing"
+                OrderStatus = "Processing", 
                 OrderDate = DateTime.Now,
                 ShippingAddress = $"{user.Address}, {user.City}, {user.Country}",
                 OrderItems = orderItems,
                 Transactions = new List<Transaction>()
             };
 
+            // Create transaction linked to this order
             var transaction = new Transaction
             {
                 Amount = total,
-                PaymentMethod = paymentMethod,
-                TransactionStatus = "Completed", // Αλλαγή από "Ολοκληρώθηκε" σε "Completed"
+                PaymentMethod = "Card",
+                TransactionStatus = "Completed", 
                 TransactionDate = DateTime.Now,
                 Order = order
             };
@@ -204,164 +235,23 @@ namespace OnlineShopUniPi.Controllers
 
             try
             {
+                // Save order + transaction
                 _context.Orders.Add(order);
                 await _context.SaveChangesAsync();
 
+                // Clear shopping cart
                 HttpContext.Session.Remove("Cart");
 
-                return RedirectToAction("ThankYou");
+                // Redirect to ThankYou page with orderId
+                return RedirectToAction("ThankYou", "Orders", new { orderId = order.OrderId });
             }
             catch (Exception ex)
             {
-                // Logging
+                // Log error and redirect back to cart
                 Console.WriteLine($"Σφάλμα στην ολοκλήρωση παραγγελίας: {ex.Message}");
                 TempData["Error"] = "Υπήρξε σφάλμα κατά την ολοκλήρωση της παραγγελίας. Δοκίμασε ξανά.";
                 return RedirectToAction("Cart", "Products");
             }
-        }
-
-
-
-        // GET: Orders
-        public async Task<IActionResult> Index()
-        {
-            var onlineStoreDBContext = _context.Orders.Include(o => o.User);
-            return View(await onlineStoreDBContext.ToListAsync());
-        }
-
-        // GET: Orders/Details/5
-        public async Task<IActionResult> Details(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var order = await _context.Orders
-                .Include(o => o.User)
-                .FirstOrDefaultAsync(m => m.OrderId == id);
-            if (order == null)
-            {
-                return NotFound();
-            }
-
-            return View(order);
-        }
-
-        // GET: Orders/Create
-        public IActionResult Create()
-        {
-            ViewData["UserId"] = new SelectList(_context.Users, "UserId", "UserId");
-            return View();
-        }
-
-        // POST: Orders/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("OrderId,UserId,TotalPrice,OrderStatus,OrderDate,ShippingAddress")] Order order)
-        {
-            if (ModelState.IsValid)
-            {
-                _context.Add(order);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
-            }
-            ViewData["UserId"] = new SelectList(_context.Users, "UserId", "UserId", order.UserId);
-            return View(order);
-        }
-
-        // GET: Orders/Edit/5
-        public async Task<IActionResult> Edit(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var order = await _context.Orders.FindAsync(id);
-            if (order == null)
-            {
-                return NotFound();
-            }
-            ViewData["UserId"] = new SelectList(_context.Users, "UserId", "UserId", order.UserId);
-            return View(order);
-        }
-
-        // POST: Orders/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("OrderId,UserId,TotalPrice,OrderStatus,OrderDate,ShippingAddress")] Order order)
-        {
-            if (id != order.OrderId)
-            {
-                return NotFound();
-            }
-
-            if (ModelState.IsValid)
-            {
-                try
-                {
-                    _context.Update(order);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!OrderExists(order.OrderId))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                return RedirectToAction(nameof(Index));
-            }
-            ViewData["UserId"] = new SelectList(_context.Users, "UserId", "UserId", order.UserId);
-            return View(order);
-        }
-
-        // GET: Orders/Delete/5
-        public async Task<IActionResult> Delete(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var order = await _context.Orders
-                .Include(o => o.User)
-                .FirstOrDefaultAsync(m => m.OrderId == id);
-            if (order == null)
-            {
-                return NotFound();
-            }
-
-            return View(order);
-        }
-
-        // POST: Orders/Delete/5
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
-        {
-            var order = await _context.Orders.FindAsync(id);
-            if (order != null)
-            {
-                _context.Orders.Remove(order);
-            }
-
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
-        }
-
-        private bool OrderExists(int id)
-        {
-            return _context.Orders.Any(e => e.OrderId == id);
         }
     }
 }
