@@ -253,5 +253,49 @@ namespace OnlineShopUniPi.Controllers
                 return RedirectToAction("Cart", "Products");
             }
         }
+
+        // Admin: view all orders
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> AllOrders()
+        {
+            var orders = await _context.Orders
+                .Include(o => o.OrderItems)
+                    .ThenInclude(oi => oi.Product)
+                        .ThenInclude(p => p.ProductImages)
+                .Include(o => o.User)
+                .OrderByDescending(o => o.OrderDate)
+                .ToListAsync();
+
+            return View("AllOrders", orders);
+        }
+
+        // Admin: delete an order
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> DeleteOrder(int id)
+        {
+            var order = await _context.Orders
+                .Include(o => o.OrderItems)
+                .FirstOrDefaultAsync(o => o.OrderId == id);
+
+            if (order == null)
+                return NotFound();
+
+            // Optional: restore product stock
+            foreach (var item in order.OrderItems)
+            {
+                var product = await _context.Products.FindAsync(item.ProductId);
+                if (product != null)
+                    product.Quantity += item.Quantity;
+            }
+
+            _context.Orders.Remove(order);
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = $"Order #{id} has been deleted.";
+            return RedirectToAction(nameof(AllOrders));
+        }
+
     }
 }

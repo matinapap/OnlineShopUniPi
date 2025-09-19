@@ -426,3 +426,18 @@ document.querySelectorAll('.quantity-input').forEach(input => {
         updateCart(productId, val);
     });
 });
+
+// ####################### Login-Signup Page #######################
+
+$(document).ready(function () {
+    var formToShow = "@ViewData["Form"]";
+    if (formToShow === "signup") {
+        $('#signupBtn').click();
+    }
+});
+
+$(document).ready(function () {
+    $('#loginForm').submit(function () {
+        $('[data-valmsg-for="Role"]').hide();
+    });
+});

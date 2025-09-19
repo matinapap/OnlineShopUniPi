@@ -1,18 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using OnlineShopUniPi.Models;
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Identity;
 using System.Security.Claims;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Authorization;
 
 
@@ -40,6 +33,7 @@ namespace OnlineShopUniPi.Controllers
         }
 
         // GET: Users
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Index(string? searchId, string? searchUsername)
         {
             var users = _context.Users.AsQueryable();
@@ -109,6 +103,7 @@ namespace OnlineShopUniPi.Controllers
         }
 
         // GET: Users/Details/5
+        [Authorize]
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -123,11 +118,16 @@ namespace OnlineShopUniPi.Controllers
                 return NotFound();
             }
 
+            var currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            if (!User.IsInRole("Admin") && currentUserId != id)
+                return Forbid();
+
             return View(user);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize]
         public async Task<IActionResult> ChangePassword(int userId, string NewPassword, string ConfirmPassword)
         {
             if (NewPassword != ConfirmPassword)
@@ -151,6 +151,7 @@ namespace OnlineShopUniPi.Controllers
 
 
         // GET: Users/Create
+        [Authorize(Roles = "Admin")]
         public IActionResult Create()
         {
             return View();
@@ -161,6 +162,7 @@ namespace OnlineShopUniPi.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create([Bind("UserId,FirstName,LastName,Email,Username,PasswordHash,PhoneNumber,ProfilePictureUrl,Address,City,Country,Role,RegistrationDate")] User user)
         {
 
@@ -238,26 +240,31 @@ namespace OnlineShopUniPi.Controllers
             return RedirectToAction("Index");
         }
 
-
-
         // GET: Users/Edit/5
+        [Authorize]
         public async Task<IActionResult> Edit(int? id)
         {
-            if (id == null)
-            {
+            if (id is null)
                 return NotFound();
-            }
 
             var user = await _context.Users.FindAsync(id);
-            if (user == null)
-            {
+            if (user is null)
                 return NotFound();
-            }
+
+            // Get current logged-in user ID
+            var currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+            // Allow access only if Admin or owner of the profile
+            var canEdit = User.IsInRole("Admin") || currentUserId == user.UserId;
+            if (!canEdit)
+                return Forbid();
+
             return View(user);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize]
         public async Task<IActionResult> Edit(int id, IFormFile? ProfilePictureFile)  // nullable
         {
             var userFromDb = await _context.Users.FindAsync(id);
@@ -265,7 +272,7 @@ namespace OnlineShopUniPi.Controllers
                 return NotFound();
 
             var currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
-            if (currentUserId != id)
+            if (!User.IsInRole("Admin") && currentUserId != id)
                 return Forbid();
 
             // Αφαιρούμε το ModelState error αν υπάρχει για το ProfilePictureFile
@@ -344,6 +351,7 @@ namespace OnlineShopUniPi.Controllers
         }
 
         // GET: Users/Delete/5
+        [Authorize]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -358,12 +366,17 @@ namespace OnlineShopUniPi.Controllers
                 return NotFound();
             }
 
+            var currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            if (!User.IsInRole("Admin") && currentUserId != id)
+                return Forbid();
+
             return View(user);
         }
 
         // POST: Users/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [Authorize]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var user = await _context.Users.FindAsync(id);
@@ -371,6 +384,10 @@ namespace OnlineShopUniPi.Controllers
             {
                 _context.Users.Remove(user);
             }
+
+            var currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            if (!User.IsInRole("Admin") && currentUserId != id)
+                return Forbid();
 
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
