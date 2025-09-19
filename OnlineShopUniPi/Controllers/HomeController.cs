@@ -49,7 +49,8 @@ namespace OnlineShopUniPi.Controllers
         public async Task<IActionResult> ClothingPage(string gender = "Women", string category = null)
         {
             var productsQuery = _context.Products
-                .Include(p => p.ProductImages) // loads images
+                .Include(p => p.ProductImages)
+                .Where(p => p.Quantity >= 1) // Only include products with quantity >= 1
                 .AsQueryable();
 
             if (!string.IsNullOrEmpty(gender))

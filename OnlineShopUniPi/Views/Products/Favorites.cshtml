@@ -6,12 +6,12 @@
 }
 
 <div class="container mt-5">
-    <!-- Τίτλος -->
+    <!-- Page Title Section -->
     <div class="section text-center mb-5">
         <h2 class="mb-4">Τα αγαπημένα μου προϊόντα</h2>
     </div>
 
-    <!-- Products -->
+    <!-- Products Grid Section -->
     <div class="section">
         <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
             @if (!Model.Any())
@@ -65,14 +65,14 @@
                                     <img src="~/images/resources/no_image.png" class="card-img-top p-3 object-fit-contain bg-light" alt="@item.Title" style="height: 200px;">
                                 }
 
-                                <!-- Badge Κατάστασης -->
+                                <!-- Product Condition Badge -->
                                 <div class="position-absolute top-0 start-0 m-2">
                                     <span class="badge bg-@(item.Condition == "Νέο" ? "success" : "warning") text-dark">
                                         @item.Condition
                                     </span>
                                 </div>
 
-                                <!-- Καρδιά Αγαπημένων -->
+                                <!-- Favorite Heart Button (via JS) -->
                                 <button class="btn btn-sm btn-light position-absolute top-0 end-0 m-2 favorite-toggle"
                                         data-product-id="@item.ProductId"
                                         title="Αγαπημένο"
@@ -81,6 +81,7 @@
                                 </button>
                             </div>
 
+                            <!-- Product Info -->
                             <div class="card-body">
                                 <h5 class="card-title fw-bold text-truncate">@item.Title</h5>
                                 <p class="card-text text-muted small" style="min-height: 40px;">
@@ -93,6 +94,7 @@
                                 </div>
                             </div>
 
+                            <!-- Card Footer: Details Button -->
                             <div class="card-footer bg-white border-top-0 d-flex justify-content-center pt-0">
                                 <a asp-controller="Products" asp-action="Details" asp-route-id="@item.ProductId" class="btn btn-outline-primary btn-sm px-3">
                                     <i class="bi bi-eye-fill me-1"></i> Λεπτομέρειες
@@ -109,57 +111,3 @@
         @Html.AntiForgeryToken()
     </form>
 </div>
-
-@section Scripts {
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const isAuthenticated = document.body.dataset.authenticated === "true";
-
-            document.querySelectorAll('.favorite-toggle').forEach(button => {
-                button.addEventListener('click', async function () {
-                    if (!isAuthenticated) {
-                        window.location.href = '/Users/LoginSignup';
-                        return;
-                    }
-
-                    const productId = parseInt(this.dataset.productId);
-                    const icon = this.querySelector('i');
-
-                    try {
-                        const response = await fetch('/Products/Favorites', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
-                            },
-                            body: JSON.stringify({ ProductId: productId })
-                        });
-
-                        if (response.ok) {
-                            // Toggle καρδιάς
-                            icon.classList.toggle('bi-heart');
-                            icon.classList.toggle('bi-heart-fill');
-
-                            // Αν είμαστε στη σελίδα Favorites και κάναμε unfavorite, αφαίρεσε το προϊόν
-                            if (window.location.pathname.toLowerCase().includes('/products/favorites')) {
-                                const cardCol = this.closest('.col');
-                                cardCol.remove();
-
-                                // Έλεγχος αν έμειναν άλλα προϊόντα
-                                const remaining = document.querySelectorAll('.favorite-toggle').length;
-                                if (remaining === 0) {
-                                    const container = document.querySelector('.section .row');
-                                    container.innerHTML = '<p class="text-muted text-center">Δεν έχετε προσθέσει προϊόντα στα αγαπημένα.</p>';
-                                }
-                            }
-                        } else {
-                            console.error("Η ενέργεια απέτυχε.");
-                        }
-                    } catch (error) {
-                        console.error("Σφάλμα κατά την αποστολή:", error);
-                    }
-                });
-            });
-        });
-    </script>
-}

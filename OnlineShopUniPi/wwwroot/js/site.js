@@ -196,7 +196,6 @@ function toggleHeart(button, event) {
 
 // ####################### Purchases Handling Dropdown #######################
 
-// Purchase Filter
 document.getElementById('orderFilter')?.addEventListener('change', function () {
     const filter = this.value;
     window.location.href = `/Orders/MyPurchases?filter=${filter}`;
@@ -234,5 +233,196 @@ document.querySelectorAll('.order-status-select').forEach(function (select) {
             console.error(err);
             alert('Error updating order.');
         }
+    });
+});
+
+// ####################### Favorites #######################
+
+document.addEventListener('DOMContentLoaded', function () {
+    const isAuthenticated = document.body.dataset.authenticated === "true";
+
+    document.querySelectorAll('.favorite-toggle').forEach(button => {
+        button.addEventListener('click', async function () {
+            if (!isAuthenticated) {
+                window.location.href = '/Users/LoginSignup';
+                return;
+            }
+
+            const productId = parseInt(this.dataset.productId);
+            const icon = this.querySelector('i');
+
+            try {
+                const response = await fetch('/Products/Favorites', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                    },
+                    body: JSON.stringify({ ProductId: productId })
+                });
+
+                if (response.ok) {
+                    // Toggle καρδιάς
+                    icon.classList.toggle('bi-heart');
+                    icon.classList.toggle('bi-heart-fill');
+
+                    // Αν είμαστε στη σελίδα Favorites και κάναμε unfavorite, αφαίρεσε το προϊόν
+                    if (window.location.pathname.toLowerCase().includes('/products/favorites')) {
+                        const cardCol = this.closest('.col');
+                        cardCol.remove();
+
+                        // Έλεγχος αν έμειναν άλλα προϊόντα
+                        const remaining = document.querySelectorAll('.favorite-toggle').length;
+                        if (remaining === 0) {
+                            const container = document.querySelector('.section .row');
+                            container.innerHTML = '<p class="text-muted text-center">Δεν έχετε προσθέσει προϊόντα στα αγαπημένα.</p>';
+                        }
+                    }
+                } else {
+                    console.error("Η ενέργεια απέτυχε.");
+                }
+            } catch (error) {
+                console.error("Σφάλμα κατά την αποστολή:", error);
+            }
+        });
+    });
+});
+
+// ####################### Clothing Categories #######################
+
+const maleClothes = [
+    "Shirts",
+    "T-shirts / Tops",
+    "Sweaters and Hoodies",
+    "Jackets / Coats",
+    "Jeans and Pants",
+    "Other"
+];
+
+const femaleClothes = [
+    "Dresses and bodysuits",
+    "T-shirts / Tops",
+    "Jackets / Coats",
+    "Beachwear / Swimwear",
+    "Shirts and blouses",
+    "Pants / Trousers",
+    "Sweaters / Jumpers",
+    "Jeans",
+    "Hoodies / Sweatshirts",
+    "Skirts and shorts",
+    "Other"
+];
+
+const genderSelect = document.getElementById("GenderSelect");
+const categorySelect = document.getElementById("CategorySelect");
+
+function populateCategories(selectedGender, selectedCategory) {
+    categorySelect.innerHTML = '<option value="">-- Επιλέξτε κατηγορία --</option>';
+    let clothesList = [];
+
+    if (selectedGender === "Men") {
+        clothesList = maleClothes;
+    } else if (selectedGender === "Women") {
+        clothesList = femaleClothes;
+    }
+
+    if (clothesList.length > 0) {
+        clothesList.forEach(cat => {
+            const option = document.createElement("option");
+            option.value = cat;
+            option.text = cat;
+            if (cat === selectedCategory) {
+                option.selected = true;
+            }
+            categorySelect.appendChild(option);
+        });
+        categorySelect.disabled = false;
+    } else {
+        categorySelect.disabled = true;
+    }
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+    const currentGender = "@Model.Gender";
+    const currentCategory = "@Model.Category";
+    if (currentGender) {
+        populateCategories(currentGender, currentCategory);
+    }
+});
+
+genderSelect.addEventListener("change", function () {
+    populateCategories(this.value, "");
+});
+
+// ####################### Details Quantity Buttons #######################
+
+const decreaseBtn = document.getElementById("decreaseBtn");
+const increaseBtn = document.getElementById("increaseBtn");
+const quantityInput = document.getElementById("quantityInput");
+const maxQuantity = parseInt(quantityInput.max);
+
+    decreaseBtn.addEventListener("click", () => {
+    let val = parseInt(quantityInput.value);
+        if (val > 1) quantityInput.value = val - 1;
+    });
+
+    increaseBtn.addEventListener("click", () => {
+    let val = parseInt(quantityInput.value);
+if (val < maxQuantity) quantityInput.value = val + 1;
+    });
+
+// ####################### Cart Quantity Buttons #######################
+
+function updateCart(productId, quantity) {
+    fetch('@Url.Action("UpdateCartQuantity", "Products")', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'RequestVerificationToken': getAntiForgeryToken()
+        },
+        body: JSON.stringify({ productId: productId, quantity: parseInt(quantity) })
+    })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('cartTotal').innerText = data.total.toFixed(2);
+            }
+        });
+}
+
+document.querySelectorAll('.btn-increase').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const productId = parseInt(btn.dataset.productid);
+        const input = document.querySelector('.quantity-input[data-productid="' + productId + '"]');
+        let val = parseInt(input.value);
+        const max = parseInt(input.max);
+        if (val < max) {
+            input.value = val + 1;
+            updateCart(productId, input.value);
+        }
+    });
+});
+
+document.querySelectorAll('.btn-decrease').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const productId = parseInt(btn.dataset.productid);
+        const input = document.querySelector('.quantity-input[data-productid="' + productId + '"]');
+        let val = parseInt(input.value);
+        if (val > 1) {
+            input.value = val - 1;
+            updateCart(productId, input.value);
+        }
+    });
+});
+
+document.querySelectorAll('.quantity-input').forEach(input => {
+    input.addEventListener('change', () => {
+        const productId = parseInt(input.dataset.productid);
+        let val = parseInt(input.value);
+        const max = parseInt(input.max);
+        if (val < 1) val = 1;
+        if (val > max) val = max;
+        input.value = val;
+        updateCart(productId, val);
     });
 });

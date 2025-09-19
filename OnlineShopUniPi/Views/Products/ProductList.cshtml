@@ -1,26 +1,30 @@
 ﻿@model IEnumerable<OnlineShopUniPi.Models.Product>
 
 @{
-    ViewData["Title"] = "Τα Προϊόντα Μου";
+    ViewData["Title"] = "My Products";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
 <div class="container py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="display-6 fw-bold text-dark">Τα Προϊόντα Μου</h1>
+        <h1 class="display-6 fw-bold text-dark">My Products</h1>
+
+        <!-- Button to create a new product -->
         <a asp-action="Create" class="btn btn-success d-flex align-items-center">
-            <i class="bi bi-plus-circle me-2"></i> Προσθήκη Προϊόντος
+            <i class="bi bi-plus-circle me-2"></i> Add a Product
         </a>
     </div>
 
     @if (Model == null || !Model.Any())
     {
+        <!-- Display message if there are no products -->
         <div class="alert alert-info text-center py-3">
-            <i class="bi bi-info-circle-fill me-2"></i> Δεν έχετε προϊόντα προς εμφάνιση.
+            <i class="bi bi-info-circle-fill me-2"></i> You have no products to display.
         </div>
     }
     else
     {
+        <!-- Grid layout for products -->
         <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
             @foreach (var item in Model)
             {
@@ -28,7 +32,6 @@
                 var hasImages = images.Count > 0;
                 var carouselId = $"carousel_{item.ProductId}";
 
-                // Βρίσκουμε index της εικόνας που έχει IsMainImage == true (και δεν είναι null), αλλιώς 0
                 int activeIndex = images.FindIndex(img => img.IsMainImage.HasValue && img.IsMainImage.Value);
                 if (activeIndex == -1) activeIndex = 0;
 
@@ -37,8 +40,8 @@
                         <div class="position-relative">
                             @if (hasImages)
                             {
+                                <!-- Product image carousel -->
                                 <div id="@carouselId" class="carousel slide" data-bs-interval="false">
-                                    <!-- Αφαιρέθηκε το data-bs-ride -->
                                     <div class="carousel-inner">
                                         @for (int i = 0; i < images.Count; i++)
                                         {
@@ -53,6 +56,7 @@
 
                                     @if (images.Count > 1)
                                     {
+                                        <!-- Carousel controls -->
                                         <button class="carousel-control-prev" type="button" data-bs-target="#@carouselId" data-bs-slide="prev">
                                             <span class="carousel-control-prev-icon" aria-hidden="true"></span>
                                             <span class="visually-hidden">Previous</span>
@@ -66,15 +70,19 @@
                             }
                             else
                             {
+                                <!-- Placeholder image when no product images exist -->
                                 <img src="~/images/resources/no_image.png" class="card-img-top p-3 object-fit-contain bg-light" alt="@item.Title" style="height: 200px;">
                             }
 
+                            <!-- Product condition badge -->
                             <div class="position-absolute top-0 end-0 m-2">
-                                <span class="badge bg-@(item.Condition == "Νέο" ? "success" : "warning") text-dark">
+                                <span class="badge bg-@(item.Condition == "New" ? "success" : "warning") text-dark">
                                     @item.Condition
                                 </span>
                             </div>
                         </div>
+
+                        <!-- Product info -->
                         <div class="card-body">
                             <h5 class="card-title fw-bold text-truncate">@item.Title</h5>
                             <p class="card-text text-muted small" style="min-height: 40px;">
@@ -86,6 +94,8 @@
                                 <h5 class="text-primary mb-0">€@item.Price</h5>
                             </div>
                         </div>
+
+                        <!-- Card footer with action buttons -->
                         <div class="card-footer bg-white border-top-0 d-flex justify-content-between pt-0">
                             <a asp-action="Details" asp-route-id="@item.ProductId" class="btn btn-outline-primary btn-sm px-3">
                                 <i class="bi bi-eye-fill me-1"></i> Λεπτομέρειες

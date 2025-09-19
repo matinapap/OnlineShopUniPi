@@ -52,7 +52,6 @@
                         <label asp-for="Category" class="form-label fw-bold"></label>
                         <select asp-for="Category" class="form-select rounded-pill" id="CategorySelect">
                             <option value="">-- Επιλέξτε κατηγορία --</option>
-                            <!-- οι κατηγορίες θα φορτωθούν από το script -->
                         </select>
                         <span asp-validation-for="Category" class="text-danger"></span>
                     </div>
@@ -115,72 +114,3 @@
         </div>
     </div>
 </div>
-
-@section Scripts {
-    <script>
-        const maleClothes = [
-            "Shirts",
-            "T-shirts / Tops",
-            "Sweaters and Hoodies",
-            "Jackets / Coats",
-            "Jeans and Pants",
-            "Other"
-        ];
-
-        const femaleClothes = [
-            "Dresses and bodysuits",
-            "T-shirts / Tops",
-            "Jackets / Coats",
-            "Beachwear / Swimwear",
-            "Shirts and blouses",
-            "Pants / Trousers",
-            "Sweaters / Jumpers",
-            "Jeans",
-            "Hoodies / Sweatshirts",
-            "Skirts and shorts",
-            "Other"
-        ];
-
-        const genderSelect = document.getElementById("GenderSelect");
-        const categorySelect = document.getElementById("CategorySelect");
-
-        function populateCategories(selectedGender, selectedCategory) {
-            categorySelect.innerHTML = '<option value="">-- Επιλέξτε κατηγορία --</option>';
-            let clothesList = [];
-
-            if (selectedGender === "Men") {
-                clothesList = maleClothes;
-            } else if (selectedGender === "Women") {
-                clothesList = femaleClothes;
-            }
-
-            if (clothesList.length > 0) {
-                clothesList.forEach(cat => {
-                    const option = document.createElement("option");
-                    option.value = cat;
-                    option.text = cat;
-                    if (cat === selectedCategory) {
-                        option.selected = true;
-                    }
-                    categorySelect.appendChild(option);
-                });
-                categorySelect.disabled = false;
-            } else {
-                categorySelect.disabled = true;
-            }
-        }
-
-        // On page load
-        document.addEventListener("DOMContentLoaded", function () {
-            const currentGender = "@Model.Gender";
-            const currentCategory = "@Model.Category";
-            if (currentGender) {
-                populateCategories(currentGender, currentCategory);
-            }
-        });
-
-        genderSelect.addEventListener("change", function () {
-            populateCategories(this.value, "");
-        });
-    </script>
-}

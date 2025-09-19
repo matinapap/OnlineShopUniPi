@@ -7,7 +7,6 @@
     var quantities = ViewBag.CartQuantities as Dictionary<int, int> ?? new Dictionary<int, int>();
 }
 
-<!-- Κρυφό φόρμακι για το CSRF token -->
 <form id="antiForgeryForm" style="display:none;">
     @Html.AntiForgeryToken()
 </form>
@@ -96,13 +95,11 @@ else
     <div class="mt-4 text-center">
         <h4>Σύνολο Καλαθιού: €<span id="cartTotal">@Model.Sum(p => (quantities.ContainsKey(p.ProductId) ? quantities[p.ProductId] : 1) * p.Price)</span></h4>
 
-        <!-- Κουμπί ολοκλήρωσης αγοράς -->
         <button type="button" class="btn btn-success btn-lg" data-bs-toggle="modal" data-bs-target="#checkoutModal">
             ✅ Ολοκλήρωση Αγοράς
         </button>
     </div>
 
-    <!-- Modal -->
     <div class="modal fade" id="checkoutModal" tabindex="-1" aria-labelledby="checkoutModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -141,63 +138,6 @@ else
 
 @section Scripts {
     <script>
-        function getAntiForgeryToken() {
-            const tokenInput = document.querySelector('#antiForgeryForm input[name="__RequestVerificationToken"]');
-            return tokenInput ? tokenInput.value : '';
-        }
-
-        function updateCart(productId, quantity) {
-            fetch('@Url.Action("UpdateCartQuantity", "Products")', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'RequestVerificationToken': getAntiForgeryToken()
-                },
-                body: JSON.stringify({ productId: productId, quantity: parseInt(quantity) })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if(data.success){
-                    document.getElementById('cartTotal').innerText = data.total.toFixed(2);
-                }
-            });
-        }
-
-        document.querySelectorAll('.btn-increase').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const productId = parseInt(btn.dataset.productid);
-                const input = document.querySelector('.quantity-input[data-productid="'+productId+'"]');
-                let val = parseInt(input.value);
-                const max = parseInt(input.max);
-                if(val < max) {
-                    input.value = val + 1;
-                    updateCart(productId, input.value);
-                }
-            });
-        });
-
-        document.querySelectorAll('.btn-decrease').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const productId = parseInt(btn.dataset.productid);
-                const input = document.querySelector('.quantity-input[data-productid="'+productId+'"]');
-                let val = parseInt(input.value);
-                if(val > 1) {
-                    input.value = val - 1;
-                    updateCart(productId, input.value);
-                }
-            });
-        });
-
-        document.querySelectorAll('.quantity-input').forEach(input => {
-            input.addEventListener('change', () => {
-                const productId = parseInt(input.dataset.productid);
-                let val = parseInt(input.value);
-                const max = parseInt(input.max);
-                if(val < 1) val = 1;
-                if(val > max) val = max;
-                input.value = val;
-                updateCart(productId, val);
-            });
-        });
+        
     </script>
 }

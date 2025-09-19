@@ -1,11 +1,11 @@
 ﻿@using Newtonsoft.Json
+@using System.Security.Claims
 @model OnlineShopUniPi.Models.Product
 
 @{
-    ViewData["Title"] = "Λεπτομέρειες Προϊόντος";
+    ViewData["Title"] = "Product Details";
     Layout = "~/Views/Shared/_Layout.cshtml";
 
-    // Παίρνουμε το cart από το session (Dictionary<int,int>)
     var cartJson = Context.Session.GetString("Cart");
     var cart = string.IsNullOrEmpty(cartJson)
         ? new Dictionary<int, int>()
@@ -13,46 +13,68 @@
 
     bool inCart = cart.ContainsKey(Model.ProductId);
     int quantityInCart = cart.ContainsKey(Model.ProductId) ? cart[Model.ProductId] : 1;
+
+    var userIdValue = User.FindFirstValue(ClaimTypes.NameIdentifier);
+    int.TryParse(userIdValue, out int currentUserId);
+    bool isOwner = Model.UserId == currentUserId;
+    bool isAuthenticated = User.Identity.IsAuthenticated;
+
+    var favoriteProductIds = ViewData["FavoriteProductIds"] as List<int> ?? new List<int>();
+    bool isFavorite = favoriteProductIds.Contains(Model.ProductId);
 }
 
-<h1 class="my-4">Λεπτομέρειες Προϊόντος</h1>
+<h1 class="my-4 text-center specific-title">@Model.Title</h1>
 
-<div class="card shadow p-4 mb-4">
-    <div class="row">
+<div class="card shadow p-4 mb-4 position-relative">
+    @if (isAuthenticated && !isOwner)
+    {
+        <button type="button"
+                class="btn btn-sm btn-light position-absolute top-0 end-0 m-2 favorite-toggle"
+                data-product-id="@Model.ProductId"
+                title="Αγαπημένο"
+                style="z-index: 1050;">
+            <i class="bi @(isFavorite ? "bi-heart-fill" : "bi-heart") text-danger border border-dark rounded-circle p-1"
+               style="font-size: 1.2rem;@(isFavorite ? " color:red;" : "")"></i>
+        </button>
+    }
+
+    <div class="row g-4">
+        <!-- Product Information -->
         <div class="col-md-6">
-            <h4>@Model.Title</h4>
+            <h4>Product Details</h4>
             <dl class="row">
-                <dt class="col-sm-4">Περιγραφή</dt>
+                <dt class="col-sm-4">Description</dt>
                 <dd class="col-sm-8">@Model.Description</dd>
 
-                <dt class="col-sm-4">Φύλο</dt>
+                <dt class="col-sm-4">Gender</dt>
                 <dd class="col-sm-8">@Model.Gender</dd>
 
-                <dt class="col-sm-4">Κατηγορία</dt>
+                <dt class="col-sm-4">Category</dt>
                 <dd class="col-sm-8">@Model.Category</dd>
 
-                <dt class="col-sm-4">Τιμή</dt>
+                <dt class="col-sm-4">Price</dt>
                 <dd class="col-sm-8">€@Model.Price</dd>
 
-                <dt class="col-sm-4">Κατάσταση</dt>
+                <dt class="col-sm-4">Condition</dt>
                 <dd class="col-sm-8">@Model.Condition</dd>
 
-                <dt class="col-sm-4">Ποσότητα</dt>
+                <dt class="col-sm-4">Quantity</dt>
                 <dd class="col-sm-8">@Model.Quantity</dd>
 
-                <dt class="col-sm-4">Μέγεθος</dt>
+                <dt class="col-sm-4">Size</dt>
                 <dd class="col-sm-8">@Model.Size</dd>
 
-                <dt class="col-sm-4">Ημ/νία Δημιουργίας</dt>
+                <dt class="col-sm-4">Created At</dt>
                 <dd class="col-sm-8">@Model.CreatedAt</dd>
 
-                <dt class="col-sm-4">Χρήστης</dt>
+                <dt class="col-sm-4">Owner</dt>
                 <dd class="col-sm-8">@Model.User?.Email</dd>
             </dl>
         </div>
 
+        <!-- Product Images -->
         <div class="col-md-6">
-            <h5>Φωτογραφίες Προϊόντος</h5>
+            <h5>Product Images</h5>
             @if (Model.ProductImages != null && Model.ProductImages.Any())
             {
                 <div class="d-flex flex-wrap gap-2">
@@ -64,50 +86,45 @@
             }
             else
             {
-                <p class="text-muted fst-italic">Δεν υπάρχουν εικόνες.</p>
+                <p class="text-muted fst-italic">No images available.</p>
             }
         </div>
     </div>
 </div>
 
-<div class="mt-3">
-    <a asp-action="Edit" asp-route-id="@Model?.ProductId" class="btn btn-warning me-2">✏️ Επεξεργασία</a>
-
-    @if (inCart)
+<div class="text-center mt-3">
+    @if (isAuthenticated)
     {
-        <button class="btn btn-secondary" disabled>🛒 Ήδη στο καλάθι (Ποσότητα: @quantityInCart)</button>
+        @if (isOwner)
+        {
+            <a asp-action="Edit" asp-route-id="@Model.ProductId" class="btn btn-warning me-2">✏️ Edit Product</a>
+        }
+        else
+        {
+            <form asp-controller="Products" asp-action="AddToCart" method="post" class="d-inline">
+
+                    @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@Model.ProductId" />
+
+                <div class="input-group mb-3 d-inline-flex" style="max-width: 160px;">
+                    <button type="button" class="btn btn-outline-secondary" id="decreaseBtn">-</button>
+                    <input type="number" id="quantityInput" name="quantity" class="form-control text-center" value="1" min="1" max="@Model.Quantity" />
+                    <button type="button" class="btn btn-outline-secondary" id="increaseBtn">+</button>
+                </div>
+
+                @if (inCart)
+                {
+                    <button class="btn btn-secondary" disabled>🛒 Already in Cart (Qty: @quantityInCart)</button>
+                }
+                else
+                {
+                    <button type="submit" class="btn btn-primary">🛒 Add to Cart</button>
+                }
+            </form>
+        }
     }
     else
     {
-        <form asp-controller="Products" asp-action="AddToCart" method="post" class="d-inline">
-            <input type="hidden" name="id" value="@Model.ProductId" />
-
-            <div class="input-group mb-3" style="max-width: 160px;">
-                <button type="button" class="btn btn-outline-secondary" id="decreaseBtn">-</button>
-                <input type="number" id="quantityInput" name="quantity" class="form-control text-center" value="1" min="1" max="@Model.Quantity" />
-                <button type="button" class="btn btn-outline-secondary" id="increaseBtn">+</button>
-            </div>
-
-            <button type="submit" class="btn btn-primary">🛒 Προσθήκη στο Καλάθι</button>
-        </form>
+        <p class="text-muted">Log in to purchase or edit this product.</p>
     }
 </div>
-
-@section Scripts {
-    <script>
-        const decreaseBtn = document.getElementById("decreaseBtn");
-        const increaseBtn = document.getElementById("increaseBtn");
-        const quantityInput = document.getElementById("quantityInput");
-        const maxQuantity = parseInt(quantityInput.max);
-
-        decreaseBtn.addEventListener("click", () => {
-            let val = parseInt(quantityInput.value);
-            if (val > 1) quantityInput.value = val - 1;
-        });
-
-        increaseBtn.addEventListener("click", () => {
-            let val = parseInt(quantityInput.value);
-            if (val < maxQuantity) quantityInput.value = val + 1;
-        });
-    </script>
-}
