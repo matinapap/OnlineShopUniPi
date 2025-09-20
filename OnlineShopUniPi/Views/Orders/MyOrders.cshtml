@@ -90,3 +90,42 @@
         }
     }
 </div>
+
+@section Scripts {
+    <script>
+        // Filter change
+        document.getElementById('orderFilter')?.addEventListener('change', function () {
+            const filter = this.value;
+            window.location.href = `/Orders/MyOrders?filter=${filter}`;
+        });
+
+        // Order status change
+        document.querySelectorAll('.order-status-select').forEach(function (select) {
+            select.addEventListener('change', async function () {
+                const orderId = parseInt(this.dataset.orderId);
+                const status = this.value;
+
+                try {
+                    const response = await fetch('/Orders/UpdateOrderStatus', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
+                        },
+                        body: JSON.stringify({ OrderId: orderId, Status: status })
+                    });
+
+                    const data = await response.json();
+                    if (data.success) {
+                        location.reload(); // reload για να πάει στο History
+                    } else {
+                        alert('Error updating order: ' + (data.message || ''));
+                    }
+                } catch (err) {
+                    console.error(err);
+                    alert('Error updating order.');
+                }
+            });
+        });
+    </script>
+}

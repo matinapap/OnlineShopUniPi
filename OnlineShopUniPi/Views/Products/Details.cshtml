@@ -26,7 +26,7 @@
 <h1 class="my-4 text-center specific-title">@Model.Title</h1>
 
 <div class="card shadow p-4 mb-4 position-relative">
-    @if (isAuthenticated && !isOwner)
+    @if (isAuthenticated && !isOwner && !(User.IsInRole("Admin")))
     {
         <button type="button"
                 class="btn btn-sm btn-light position-absolute top-0 end-0 m-2 favorite-toggle"
@@ -99,7 +99,7 @@
         {
             <a asp-action="Edit" asp-route-id="@Model.ProductId" class="btn btn-warning me-2">✏️ Edit Product</a>
         }
-        else
+        else if (!User.IsInRole("Admin"))
         {
             <form asp-controller="Products" asp-action="AddToCart" method="post" class="d-inline">
 
@@ -128,3 +128,52 @@
         <p class="text-muted">Log in to purchase or edit this product.</p>
     }
 </div>
+
+@section Scripts {
+    <script>
+        function getAntiForgeryToken() {
+            // Αντικείμενο form δεν υπάρχει, μπορούμε να το προσθέσουμε
+            const tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
+            return tokenInput ? tokenInput.value : '';
+        }
+
+        function toggleHeart(button, event) {
+            event.preventDefault();
+
+            const icon = button.querySelector('i');
+            const productId = parseInt(button.dataset.productId);
+            const token = getAntiForgeryToken();
+
+            fetch('/Products/Favorites', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': token
+                },
+                body: JSON.stringify({ ProductId: productId })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    // Toggle icon
+                    icon.classList.toggle('bi-heart');
+                    icon.classList.toggle('bi-heart-fill');
+                    icon.style.color = icon.classList.contains('bi-heart-fill') ? 'red' : '';
+                } else {
+                    alert(data.message || 'Προέκυψε πρόβλημα.');
+                }
+            })
+            .catch(() => alert('Σφάλμα στο αίτημα.'));
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.favorite-toggle').forEach(button => {
+                button.addEventListener('click', function(event) {
+                    toggleHeart(button, event);
+                });
+            });
+        });
+    </script>
+}
+
+

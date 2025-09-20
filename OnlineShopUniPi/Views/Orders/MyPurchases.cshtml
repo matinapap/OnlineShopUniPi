@@ -77,3 +77,13 @@
         }
     }
 </div>
+
+@section Scripts {
+    <script>
+        // Filter change
+        document.getElementById('purchaseFilter')?.addEventListener('change', function () {
+            const filter = this.value;
+            window.location.href = `/Orders/MyPurchases?filter=${filter}`;
+        });
+    </script>
+}

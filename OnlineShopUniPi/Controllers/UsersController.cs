@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 
 
 namespace OnlineShopUniPi.Controllers
@@ -140,7 +141,6 @@ namespace OnlineShopUniPi.Controllers
             if (user == null)
                 return NotFound();
 
-            // Κάνε hash το νέο password πριν το αποθηκεύσεις
             user.PasswordHash = HashPassword(NewPassword);
 
             await _context.SaveChangesAsync();
@@ -162,42 +162,50 @@ namespace OnlineShopUniPi.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> Create([Bind("UserId,FirstName,LastName,Email,Username,PasswordHash,PhoneNumber,ProfilePictureUrl,Address,City,Country,Role,RegistrationDate")] User user)
+        public async Task<IActionResult> Create(User user)
         {
+            bool hasErrors = false;
 
-            if (ModelState.IsValid)
+            if (await _context.Users.AnyAsync(u => u.Email == user.Email))
             {
-                var existingEmailUser = await _context.Users.FirstOrDefaultAsync(u => u.Email == user.Email);
-                var existingUsernameUser = await _context.Users.FirstOrDefaultAsync(u => u.Username == user.Username);
-
-                if (existingEmailUser != null)
-                {
-                    ModelState.AddModelError("Email", "Το email χρησιμοποιείται ήδη.");
-                }
-
-                if (existingUsernameUser != null)
-                {
-                    ModelState.AddModelError("Username", "Το username χρησιμοποιείται ήδη.");
-                }
-
-                if (existingEmailUser != null || existingUsernameUser != null)
-                {
-                    ViewData["Form"] = "signup";
-                    return View("LoginSignup", user); // Early return
-                }
-
-                //Hashing the password
-                user.PasswordHash = HashPassword(user.PasswordHash);
-
-                _context.Add(user);
-                await _context.SaveChangesAsync();
-                return RedirectToAction("Details", new { id = user.UserId });
+                ModelState.AddModelError("Email", "Το email χρησιμοποιείται ήδη.");
+                hasErrors = true;
+            }
+            if (await _context.Users.AnyAsync(u => u.Username == user.Username))
+            {
+                ModelState.AddModelError("Username", "Το username χρησιμοποιείται ήδη.");
+                hasErrors = true;
             }
 
-            ViewData["Form"] = "signup";
-            return View("LoginSignup", user);
+            if (!ModelState.IsValid || hasErrors)
+            {
+                ViewData["Form"] = "signup";
+                return View("LoginSignup", user);
+            }
+
+            // Hash password & save
+            user.PasswordHash = HashPassword(user.PasswordHash);
+            user.RegistrationDate = DateTime.UtcNow;
+
+            _context.Add(user);
+            await _context.SaveChangesAsync();
+
+            // Login
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
+                new Claim(ClaimTypes.Name, user.FirstName),
+                new Claim(ClaimTypes.Email, user.Email),
+                new Claim(ClaimTypes.Role, user.Role)
+            };
+
+            var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+            var principal = new ClaimsPrincipal(identity);
+            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
+
+            return RedirectToAction("Details", new { id = user.UserId });
         }
+
 
         [Authorize(Roles = "Admin")]
         [HttpPost]
@@ -206,13 +214,11 @@ namespace OnlineShopUniPi.Controllers
       [Bind("UserId,FirstName,LastName,Email,Username,PasswordHash,PhoneNumber,ProfilePictureUrl,Address,City,Country,Role,RegistrationDate")] User user,
       string ConfirmPassword)
         {
-            // Επιβεβαίωση ότι οι κωδικοί ταιριάζουν
             if (user.PasswordHash != ConfirmPassword)
             {
                 ModelState.AddModelError("ConfirmPassword", "Οι κωδικοί δεν ταιριάζουν.");
             }
 
-            // Έλεγχοι αν υπάρχουν ήδη email/username
             var existingEmailUser = await _context.Users.FirstOrDefaultAsync(u => u.Email == user.Email);
             var existingUsernameUser = await _context.Users.FirstOrDefaultAsync(u => u.Username == user.Username);
 
@@ -226,13 +232,11 @@ namespace OnlineShopUniPi.Controllers
                 ModelState.AddModelError("Username", "Το username χρησιμοποιείται ήδη.");
             }
 
-            // Αν υπάρχουν λάθη, επιστρέφει στη φόρμα
             if (!ModelState.IsValid)
             {
                 return View("Create", user);
             }
 
-            // Αν όλα είναι ΟΚ, κάνει hash και αποθηκεύει
             user.PasswordHash = HashPassword(user.PasswordHash);
             _context.Add(user);
             await _context.SaveChangesAsync();
@@ -275,10 +279,8 @@ namespace OnlineShopUniPi.Controllers
             if (!User.IsInRole("Admin") && currentUserId != id)
                 return Forbid();
 
-            // Αφαιρούμε το ModelState error αν υπάρχει για το ProfilePictureFile
             ModelState.Remove("ProfilePictureFile");
 
-            // Προσπάθησε να ενημερώσεις τα πεδία από το form (εκτός της εικόνας)
             var success = await TryUpdateModelAsync(userFromDb, "",
                 u => u.FirstName,
                 u => u.LastName,
@@ -307,7 +309,6 @@ namespace OnlineShopUniPi.Controllers
                 return View(userFromDb);
             }
 
-            // Ανέβασε νέα εικόνα αν υπάρχει
             if (ProfilePictureFile != null && ProfilePictureFile.Length > 0)
             {
                 var fileExt = Path.GetExtension(ProfilePictureFile.FileName);
@@ -328,13 +329,11 @@ namespace OnlineShopUniPi.Controllers
             }
             else
             {
-                // Αν δεν ανέβηκε νέα εικόνα, πάρε το URL από το hidden input
                 var profilePictureUrlFromForm = Request.Form["ProfilePictureUrl"].ToString();
                 if (!string.IsNullOrWhiteSpace(profilePictureUrlFromForm))
                 {
                     userFromDb.ProfilePictureUrl = profilePictureUrlFromForm;
                 }
-                // Αν είναι κενό, κρατάμε την προηγούμενη τιμή
             }
 
             try

@@ -4,11 +4,11 @@
     ViewData["Title"] = "Login";
 }
 
-<div class="auth-container">
+<div id="authContainer" class="auth-container" data-form="@((ViewData["Form"] ?? "login").ToString())">
     <div class="sidebar">
         <h1>Welcome</h1>
         <div class="auth-buttons">
-            <button id="loginBtn" class="auth-btn active">Login</button>
+            <button id="loginBtn" class="auth-btn">Login</button>
             <button id="signupBtn" class="auth-btn">Sign Up</button>
         </div>
     </div>
@@ -16,7 +16,7 @@
     <div class="form-area">
 
         <!-- Login Form -->
-        <form id="loginForm" asp-action="Login" class="auth-form active" method="post">
+        <form id="loginForm" asp-action="Login" class="auth-form" method="post">
             @Html.AntiForgeryToken()
             <h2>Login</h2>
 
@@ -125,4 +125,6 @@
 
 @section Scripts {
     @await Html.PartialAsync("_ValidationScriptsPartial")
+
+    <script src="~/js/login_signup.js"></script>
 }

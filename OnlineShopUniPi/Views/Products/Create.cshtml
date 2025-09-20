@@ -23,19 +23,19 @@
 
                     <div class="mb-3">
                         <label asp-for="Title" class="form-label fw-bold"></label>
-                        <input asp-for="Title" class="form-control rounded-pill" />
+                        <input asp-for="Title" class="form-control rounded-pill" required />
                         <span asp-validation-for="Title" class="text-danger"></span>
                     </div>
 
                     <div class="mb-3">
                         <label asp-for="Description" class="form-label fw-bold"></label>
-                        <textarea asp-for="Description" class="form-control rounded-3" rows="3"></textarea>
+                        <textarea asp-for="Description" class="form-control rounded-3" rows="3" required></textarea>
                         <span asp-validation-for="Description" class="text-danger"></span>
                     </div>
 
                     <div class="mb-3">
                         <label asp-for="Gender" class="form-label fw-bold"></label>
-                        <select asp-for="Gender" class="form-select rounded-pill" id="GenderSelect">
+                        <select asp-for="Gender" class="form-select rounded-pill" id="GenderSelect" required>
                             <option value="">-- Επιλέξτε φύλο --</option>
                             @foreach (var g in gendercategoryList)
                             {
@@ -46,7 +46,7 @@
                     </div>
 
                     <div class="mb-3">
-                        <label asp-for="Category" class="form-label fw-bold"></label>
+                        <label asp-for="Category" class="form-label fw-bold" required></label>
                         <select asp-for="Category" class="form-select rounded-pill" id="CategorySelect" disabled>
                             <option value="">-- Επιλέξτε κατηγορία --</option>
                         </select>
@@ -55,13 +55,13 @@
 
                     <div class="mb-3">
                         <label asp-for="Quantity" class="form-label fw-bold"></label>
-                        <input asp-for="Quantity" class="form-control rounded-pill" type="number" min="1" />
+                        <input asp-for="Quantity" class="form-control rounded-pill" type="number" min="1" required />
                         <span asp-validation-for="Quantity" class="text-danger"></span>
                     </div>
 
                     <div class="mb-3">
                         <label asp-for="Size" class="form-label fw-bold"></label>
-                        <select asp-for="Size" class="form-select rounded-pill">
+                        <select asp-for="Size" class="form-select rounded-pill" required>
                             <option value="">-- Επιλέξτε μέγεθος --</option>
                             <option value="Small">Small</option>
                             <option value="Medium">Medium</option>
@@ -72,13 +72,13 @@
 
                     <div class="mb-3">
                         <label asp-for="Price" class="form-label fw-bold"></label>
-                        <input asp-for="Price" class="form-control rounded-pill" />
+                        <input asp-for="Price" class="form-control rounded-pill" required />
                         <span asp-validation-for="Price" class="text-danger"></span>
                     </div>
 
                     <div class="mb-3">
                         <label asp-for="Condition" class="form-label fw-bold"></label>
-                        <select asp-for="Condition" class="form-select rounded-pill">
+                        <select asp-for="Condition" class="form-select rounded-pill" required>
                             <option value="">-- Επιλέξτε κατάσταση --</option>
                             <option value="New">New</option>
                             <option value="Almost new">Almost new</option>
@@ -110,3 +110,7 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script src="~/js/products.js"></script>
+}

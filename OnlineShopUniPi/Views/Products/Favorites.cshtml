@@ -111,3 +111,54 @@
         @Html.AntiForgeryToken()
     </form>
 </div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const isAuthenticated = document.body.dataset.authenticated === "true";
+
+            document.querySelectorAll('.favorite-toggle').forEach(button => {
+                button.addEventListener('click', async function () {
+                    if (!isAuthenticated) {
+                        window.location.href = '/Users/LoginSignup';
+                        return;
+                    }
+
+                    const productId = parseInt(this.dataset.productId);
+                    const icon = this.querySelector('i');
+
+                    try {
+                        const response = await fetch('/Products/Favorites', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                            },
+                            body: JSON.stringify({ ProductId: productId })
+                        });
+
+                        if (response.ok) {
+                            icon.classList.toggle('bi-heart');
+                            icon.classList.toggle('bi-heart-fill');
+
+                            if (window.location.pathname.toLowerCase().includes('/products/favorites')) {
+                                const cardCol = this.closest('.col');
+                                cardCol.remove();
+
+                                const remaining = document.querySelectorAll('.favorite-toggle').length;
+                                if (remaining === 0) {
+                                    const container = document.querySelector('.section .row');
+                                    container.innerHTML = '<p class="text-muted text-center">Δεν έχετε προσθέσει προϊόντα στα αγαπημένα.</p>';
+                                }
+                            }
+                        } else {
+                            console.error("Η ενέργεια απέτυχε.");
+                        }
+                    } catch (error) {
+                        console.error("Σφάλμα κατά την αποστολή:", error);
+                    }
+                });
+            });
+        });
+    </script>
+}

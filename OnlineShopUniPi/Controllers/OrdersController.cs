@@ -277,12 +277,13 @@ namespace OnlineShopUniPi.Controllers
         {
             var order = await _context.Orders
                 .Include(o => o.OrderItems)
+                .Include(o => o.Transactions)
                 .FirstOrDefaultAsync(o => o.OrderId == id);
 
             if (order == null)
                 return NotFound();
 
-            // Optional: restore product stock
+            // Restore product stock
             foreach (var item in order.OrderItems)
             {
                 var product = await _context.Products.FindAsync(item.ProductId);
@@ -290,7 +291,13 @@ namespace OnlineShopUniPi.Controllers
                     product.Quantity += item.Quantity;
             }
 
+            // Delete related entities first
+            _context.OrderItems.RemoveRange(order.OrderItems);
+            _context.Transactions.RemoveRange(order.Transactions);
+
+            // Then delete the order itself
             _context.Orders.Remove(order);
+
             await _context.SaveChangesAsync();
 
             TempData["Success"] = $"Order #{id} has been deleted.";

@@ -149,3 +149,45 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        function getAntiForgeryToken() {
+            const tokenInput = document.querySelector('#antiForgeryForm input[name="__RequestVerificationToken"]');
+            return tokenInput ? tokenInput.value : '';
+        }
+
+        function toggleHeart(button, event) {
+            event.preventDefault();
+
+            const icon = button.querySelector('i');
+            const productId = parseInt(button.getAttribute('data-product-id'));
+
+            fetch('/Products/Favorites', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': getAntiForgeryToken()
+                },
+                body: JSON.stringify({ productId: productId })  
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    if (icon.classList.contains('bi-heart')) {
+                        icon.classList.remove('bi-heart');
+                        icon.classList.add('bi-heart-fill');
+                        icon.style.color = 'red';
+                    } else {
+                        icon.classList.remove('bi-heart-fill');
+                        icon.classList.add('bi-heart');
+                        icon.style.color = '';
+                    }
+                } else {
+                    alert('Προέκυψε πρόβλημα.');
+                }
+            })
+            .catch(() => alert('Προέκυψε σφάλμα στο αίτημα.'));
+        }
+    </script>
+}
