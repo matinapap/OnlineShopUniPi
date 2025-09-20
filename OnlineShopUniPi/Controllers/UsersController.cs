@@ -378,23 +378,54 @@ namespace OnlineShopUniPi.Controllers
         [Authorize]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var user = await _context.Users.FindAsync(id);
-            if (user != null)
-            {
-                _context.Users.Remove(user);
-            }
+
+            var user = await _context.Users
+                .Include(u => u.Products)
+                    .ThenInclude(p => p.ProductImages)
+                .Include(u => u.Products)
+                    .ThenInclude(p => p.Favorites)
+                .Include(u => u.Products)
+                    .ThenInclude(p => p.OrderItems)
+                .Include(u => u.Favorites)
+                .Include(u => u.Orders)
+                    .ThenInclude(o => o.OrderItems)
+                .Include(u => u.Orders)
+                    .ThenInclude(o => o.Transactions)
+                .FirstOrDefaultAsync(u => u.UserId == id);
+
+            if (user == null)
+                return NotFound();
 
             var currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
             if (!User.IsInRole("Admin") && currentUserId != id)
                 return Forbid();
 
+            // Διαγραφή Favorites του χρήστη
+            _context.Favorites.RemoveRange(user.Favorites);
+
+            // Διαγραφή Orders & OrderItems & Transactions
+            foreach (var order in user.Orders)
+            {
+                _context.OrderItems.RemoveRange(order.OrderItems);
+                _context.Transactions.RemoveRange(order.Transactions);
+            }
+            _context.Orders.RemoveRange(user.Orders);
+
+            // Διαγραφή Products του χρήστη
+            foreach (var product in user.Products)
+            {
+                _context.Favorites.RemoveRange(product.Favorites);
+                _context.OrderItems.RemoveRange(product.OrderItems);
+                _context.ProductImages.RemoveRange(product.ProductImages);
+                _context.SellerReviews.RemoveRange(product.SellerReviews);
+            }
+            _context.Products.RemoveRange(user.Products);
+
+            // Τέλος, διαγραφή του χρήστη
+            _context.Users.Remove(user);
+
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
-        }
-
-        private bool UserExists(int id)
-        {
-            return _context.Users.Any(e => e.UserId == id);
         }
     }
 }

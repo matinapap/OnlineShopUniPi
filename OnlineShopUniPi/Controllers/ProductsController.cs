@@ -413,6 +413,7 @@ namespace OnlineShopUniPi.Controllers
                 return Forbid(); // 403 Forbidden
 
             ViewData["UserId"] = new SelectList(_context.Users, "UserId", "UserId", product.UserId);
+
             return View(product);
         }
 
@@ -531,6 +532,9 @@ namespace OnlineShopUniPi.Controllers
             _context.Update(existingProduct);
             await _context.SaveChangesAsync();
 
+            if (User.IsInRole("Admin"))
+                return RedirectToAction("Index", "Products");
+
             return RedirectToAction("GetProducts");
         }
 
@@ -572,6 +576,9 @@ namespace OnlineShopUniPi.Controllers
         {
             var product = await _context.Products
                 .Include(p => p.ProductImages)
+                .Include(p => p.Favorites)
+                .Include(p => p.OrderItems)
+                .Include(p => p.SellerReviews)
                 .FirstOrDefaultAsync(p => p.ProductId == id);
 
             if (product == null)
@@ -581,8 +588,7 @@ namespace OnlineShopUniPi.Controllers
             if (string.IsNullOrEmpty(userIdValue) || !int.TryParse(userIdValue, out int userId))
                 return Unauthorized();
 
-            // Authorization check: Admin can delete any product
-            // Regular users can only delete their own products
+            // Authorization: Admin can delete any product, user only their own
             if (!User.IsInRole("Admin") && product.UserId != userId)
                 return Forbid(); // 403 Forbidden
 
@@ -595,14 +601,28 @@ namespace OnlineShopUniPi.Controllers
                     if (System.IO.File.Exists(imagePath))
                         System.IO.File.Delete(imagePath);
                 }
-
                 _context.ProductImages.RemoveRange(product.ProductImages);
             }
 
+            // Delete related Favorites
+            if (product.Favorites != null)
+                _context.Favorites.RemoveRange(product.Favorites);
+
+            // Delete related OrderItems
+            if (product.OrderItems != null)
+                _context.OrderItems.RemoveRange(product.OrderItems);
+
+            // Delete related SellerReviews
+            if (product.SellerReviews != null)
+                _context.SellerReviews.RemoveRange(product.SellerReviews);
+
+            // Finally, delete the product itself
             _context.Products.Remove(product);
+
             await _context.SaveChangesAsync();
 
-            return RedirectToAction("GetProducts");
+            return RedirectToAction("Index", "Products");
         }
+
     }
 }
