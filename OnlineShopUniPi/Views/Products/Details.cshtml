@@ -6,6 +6,7 @@
     ViewData["Title"] = "Product Details";
     Layout = "~/Views/Shared/_Layout.cshtml";
 
+    // Καλάθι
     var cartJson = Context.Session.GetString("Cart");
     var cart = string.IsNullOrEmpty(cartJson)
         ? new Dictionary<int, int>()
@@ -14,11 +15,13 @@
     bool inCart = cart.ContainsKey(Model.ProductId);
     int quantityInCart = cart.ContainsKey(Model.ProductId) ? cart[Model.ProductId] : 1;
 
+    // Χρήστης
     var userIdValue = User.FindFirstValue(ClaimTypes.NameIdentifier);
     int.TryParse(userIdValue, out int currentUserId);
     bool isOwner = Model.UserId == currentUserId;
     bool isAuthenticated = User.Identity.IsAuthenticated;
 
+    // Αγαπημένα
     var favoriteProductIds = ViewData["FavoriteProductIds"] as List<int> ?? new List<int>();
     bool isFavorite = favoriteProductIds.Contains(Model.ProductId);
 }
@@ -26,15 +29,16 @@
 <h1 class="my-4 text-center specific-title">@Model.Title</h1>
 
 <div class="card shadow p-4 mb-4 position-relative">
-    @if (isAuthenticated && !isOwner && !(User.IsInRole("Admin")))
+    @if (isAuthenticated && !isOwner && !User.IsInRole("Admin"))
     {
         <button type="button"
                 class="btn btn-sm btn-light position-absolute top-0 end-0 m-2 favorite-toggle"
                 data-product-id="@Model.ProductId"
                 title="Αγαπημένο"
                 style="z-index: 1050;">
-            <i class="bi @(isFavorite ? "bi-heart-fill" : "bi-heart") text-danger border border-dark rounded-circle p-1"
-               style="font-size: 1.2rem;@(isFavorite ? " color:red;" : "")"></i>
+            <i class="bi @(isFavorite ? "bi-heart-fill text-danger" : "bi-heart text-dark")
+                      border border-dark rounded-circle p-1"
+               style="font-size: 1.2rem;"></i>
         </button>
     }
 
@@ -80,7 +84,8 @@
                 <div class="d-flex flex-wrap gap-2">
                     @foreach (var image in Model.ProductImages)
                     {
-                        <img src="@image.ImageUrl" alt="Product image" class="img-thumbnail" style="width: 120px; height: 120px; object-fit: cover;" />
+                        <img src="@image.ImageUrl" alt="Product image" class="img-thumbnail"
+                             style="width: 120px; height: 120px; object-fit: cover;" />
                     }
                 </div>
             }
@@ -97,27 +102,30 @@
     {
         @if (isOwner)
         {
-            <a asp-action="Edit" asp-route-id="@Model.ProductId" class="btn btn-warning me-2">✏️ Edit Product</a>
+            <a asp-action="Edit" asp-route-id="@Model.ProductId"
+               class="btn btn-warning me-2">✏️ Edit Product</a>
         }
         else if (!User.IsInRole("Admin"))
         {
             <form asp-controller="Products" asp-action="AddToCart" method="post" class="d-inline">
-
-                    @Html.AntiForgeryToken()
+                @Html.AntiForgeryToken()
                 <input type="hidden" name="id" value="@Model.ProductId" />
-
-                <div class="input-group mb-3 d-inline-flex" style="max-width: 160px;">
-                    <button type="button" class="btn btn-outline-secondary" id="decreaseBtn">-</button>
-                    <input type="number" id="quantityInput" name="quantity" class="form-control text-center" value="1" min="1" max="@Model.Quantity" />
-                    <button type="button" class="btn btn-outline-secondary" id="increaseBtn">+</button>
-                </div>
 
                 @if (inCart)
                 {
-                    <button class="btn btn-secondary" disabled>🛒 Already in Cart (Qty: @quantityInCart)</button>
+                    <button class="btn btn-secondary" disabled>
+                        🛒 Already in Cart (Qty: @quantityInCart)
+                    </button>
                 }
                 else
                 {
+                    <div class="input-group mb-3 d-inline-flex" style="max-width: 160px;">
+                        <button type="button" class="btn btn-outline-secondary" id="decreaseBtn">-</button>
+                        <input type="number" id="quantityInput" name="quantity"
+                               class="form-control text-center" value="1" min="1" max="@Model.Quantity" />
+                        <button type="button" class="btn btn-outline-secondary" id="increaseBtn">+</button>
+                    </div>
+
                     <button type="submit" class="btn btn-primary">🛒 Add to Cart</button>
                 }
             </form>
@@ -129,51 +137,74 @@
     }
 </div>
 
+<br />
+
 @section Scripts {
     <script>
         function getAntiForgeryToken() {
-            // Αντικείμενο form δεν υπάρχει, μπορούμε να το προσθέσουμε
             const tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
             return tokenInput ? tokenInput.value : '';
         }
 
-        function toggleHeart(button, event) {
+        async function toggleHeart(button, event) {
             event.preventDefault();
 
             const icon = button.querySelector('i');
             const productId = parseInt(button.dataset.productId);
             const token = getAntiForgeryToken();
 
-            fetch('/Products/Favorites', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'RequestVerificationToken': token
-                },
-                body: JSON.stringify({ ProductId: productId })
-            })
-            .then(res => res.json())
-            .then(data => {
+            try {
+                const res = await fetch('/Products/Favorites', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': token
+                    },
+                    body: JSON.stringify({ ProductId: productId })
+                });
+
+                if (!res.ok) throw new Error("Server error");
+
+                const data = await res.json();
+
                 if (data.success) {
-                    // Toggle icon
                     icon.classList.toggle('bi-heart');
                     icon.classList.toggle('bi-heart-fill');
-                    icon.style.color = icon.classList.contains('bi-heart-fill') ? 'red' : '';
+                    icon.classList.toggle('text-danger');
+                    icon.classList.toggle('text-dark');
                 } else {
                     alert(data.message || 'Προέκυψε πρόβλημα.');
                 }
-            })
-            .catch(() => alert('Σφάλμα στο αίτημα.'));
+            } catch (err) {
+                console.error(err);
+                alert('Σφάλμα στο αίτημα.');
+            }
         }
 
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
+            // Toggle favorites
             document.querySelectorAll('.favorite-toggle').forEach(button => {
-                button.addEventListener('click', function(event) {
-                    toggleHeart(button, event);
-                });
+                button.addEventListener('click', event => toggleHeart(button, event));
             });
+
+            // Quantity buttons
+            const decreaseBtn = document.getElementById("decreaseBtn");
+            const increaseBtn = document.getElementById("increaseBtn");
+            const quantityInput = document.getElementById("quantityInput");
+
+            if (decreaseBtn && increaseBtn && quantityInput) {
+                const maxQuantity = parseInt(quantityInput.max);
+
+                decreaseBtn.addEventListener("click", () => {
+                    let val = parseInt(quantityInput.value) || 1;
+                    if (val > 1) quantityInput.value = val - 1;
+                });
+
+                increaseBtn.addEventListener("click", () => {
+                    let val = parseInt(quantityInput.value) || 1;
+                    if (val < maxQuantity) quantityInput.value = val + 1;
+                });
+            }
         });
     </script>
 }
-
-

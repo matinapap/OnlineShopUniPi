@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using OnlineShopUniPi.Models;
 using OnlineShopUniPi.Helpers;
 using Newtonsoft.Json;
+using System.Text.Json;
 
 namespace OnlineShopUniPi.Controllers
 {
@@ -115,8 +116,8 @@ namespace OnlineShopUniPi.Controllers
                 return BadRequest();
 
             // Extract ProductId and Quantity from the JSON object
-            int productId = Convert.ToInt32(model["ProductId"]);
-            int quantity = Convert.ToInt32(model["Quantity"]);
+            int productId = ((JsonElement)model["ProductId"]).GetInt32();
+            int quantity = ((JsonElement)model["Quantity"]).GetInt32();
 
             // Retrieve the cart from session (Dictionary<ProductId, Quantity>)
             var cart = HttpContext.Session.GetObjectFromJson<Dictionary<int, int>>("Cart")
@@ -138,13 +139,15 @@ namespace OnlineShopUniPi.Controllers
             HttpContext.Session.SetObjectAsJson("Cart", cart);
 
             // Calculate the total amount based on product prices and quantities
-            var productPrices = _context.Products
+            var productsInCart = _context.Products
                 .Where(p => cart.Keys.Contains(p.ProductId))
-                .ToDictionary(p => p.ProductId, p => p.Price);
+                .AsEnumerable() 
+                .ToList();
 
-            decimal total = cart.Sum(c => productPrices.ContainsKey(c.Key) ? productPrices[c.Key] * c.Value : 0);
+            var total = productsInCart.Sum(p => p.Price * cart[p.ProductId]);
 
-            return Json(new { success = true, total = total });
+
+            return Json(new { success = true, total });
         }
 
         [Authorize]
@@ -194,6 +197,10 @@ namespace OnlineShopUniPi.Controllers
                 .Where(p => p.Quantity >= 1 &&
                             _context.Favorites.Any(f => f.UserId == userId && f.ProductId == p.ProductId))
                 .ToListAsync();
+
+            var favoriteProductIds = favoriteProducts.Select(p => p.ProductId).ToList();
+
+            ViewData["FavoriteProductIds"] = favoriteProductIds;
 
             return View(favoriteProducts);
         }
@@ -278,6 +285,18 @@ namespace OnlineShopUniPi.Controllers
             {
                 return NotFound();
             }
+
+            List<int> favoriteProductIds = new List<int>();
+            if (User.Identity.IsAuthenticated)
+            {
+                var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+                favoriteProductIds = await _context.Favorites
+                    .Where(f => f.UserId == userId)
+                    .Select(f => f.ProductId)
+                    .ToListAsync();
+            }
+
+            ViewData["FavoriteProductIds"] = favoriteProductIds;
 
             // Return the product details view
             return View(product);
