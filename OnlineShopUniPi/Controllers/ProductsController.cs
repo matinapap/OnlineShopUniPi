@@ -331,9 +331,11 @@ namespace OnlineShopUniPi.Controllers
 
             // Όλα τα διαθέσιμα προϊόντα εκτός του τρέχοντος
             var allProducts = await _context.Products
-                .Include(p => p.ProductImages)
-                .Where(p => p.ProductId != id && p.Quantity > 0)
-                .ToListAsync();
+            .Include(p => p.ProductImages)
+            .Where(p => p.ProductId != id
+                        && p.Quantity > 0
+                        && p.UserId != currentUserId)
+            .ToListAsync();
 
             // Προϊόντα που έχει αγοράσει ο χρήστης
             var purchasedIds = await _context.OrderItems
