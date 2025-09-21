@@ -228,31 +228,27 @@ namespace OnlineShopUniPi.Controllers
                 .ToListAsync();
 
             var scoredProducts = products
-     .Select(p =>
-     {
-         var mainImage = p.ProductImages.FirstOrDefault(img => img.IsMainImage == true)?.ImageUrl;
-         var imageUrl = string.IsNullOrEmpty(mainImage) ? "/images/resources/no_image.png" :  mainImage;
+             .Select(p =>
+             {
+                 var mainImage = p.ProductImages.FirstOrDefault(img => img.IsMainImage == true)?.ImageUrl;
+                 var imageUrl = string.IsNullOrEmpty(mainImage) ? "/images/resources/no_image.png" :  mainImage;
 
-         // Debug output
-         Console.WriteLine($"ProductId: {p.ProductId}, Title: {p.Title}, ImageUrl: {imageUrl}");
+                 Console.WriteLine($"ProductId: {p.ProductId}, Title: {p.Title}, ImageUrl: {imageUrl}");
 
-         return new
-         {
-             p.ProductId,
-             p.Title,
-             p.Price,
-             ImageUrl = imageUrl,
-             Score = (purchasedIds.Contains(p.ProductId) ? 1 : 0)
-                   + (favoriteIds.Contains(p.ProductId) ? 1 : 0)
-         };
-     })
-     .OrderByDescending(x => x.Score)
-     .ThenBy(x => Guid.NewGuid())
-     .Take(5)
-     .ToList();
-
-
-
+                 return new
+                 {
+                     p.ProductId,
+                     p.Title,
+                     p.Price,
+                     ImageUrl = imageUrl,
+                     Score = (purchasedIds.Contains(p.ProductId) ? 1 : 0)
+                           + (favoriteIds.Contains(p.ProductId) ? 1 : 0)
+                 };
+             })
+             .OrderByDescending(x => x.Score)
+             .ThenBy(x => Guid.NewGuid())
+             .Take(5)
+             .ToList();
 
             return Json(scoredProducts);
 
@@ -329,7 +325,6 @@ namespace OnlineShopUniPi.Controllers
 
             int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int currentUserId);
 
-            // Όλα τα διαθέσιμα προϊόντα εκτός του τρέχοντος
             var allProducts = await _context.Products
             .Include(p => p.ProductImages)
             .Where(p => p.ProductId != id
@@ -337,19 +332,16 @@ namespace OnlineShopUniPi.Controllers
                         && p.UserId != currentUserId)
             .ToListAsync();
 
-            // Προϊόντα που έχει αγοράσει ο χρήστης
             var purchasedIds = await _context.OrderItems
                 .Where(oi => oi.Order.UserId == currentUserId)
                 .Select(oi => oi.ProductId)
                 .ToListAsync();
 
-            // Αγαπημένα του χρήστη
             var favoriteIds = await _context.Favorites
                 .Where(f => f.UserId == currentUserId)
                 .Select(f => f.ProductId)
                 .ToListAsync();
 
-            // Υπολογισμός σκορ για personalization
             var scoredProducts = allProducts
                 .Select(p => new
                 {
@@ -359,9 +351,9 @@ namespace OnlineShopUniPi.Controllers
                           + (purchasedIds.Contains(p.ProductId) ? 1 : 0)
                           + (favoriteIds.Contains(p.ProductId) ? 1 : 0)
                 })
-                .Where(x => x.Score > 0) // φιλτράρουμε προϊόντα με 0 σκορ
+                .Where(x => x.Score > 0) 
                 .OrderByDescending(x => x.Score)
-                .ThenBy(x => Guid.NewGuid()) // για τυχαιοποίηση ανάμεσα σε ισοβαθμούντες
+                .ThenBy(x => Guid.NewGuid()) 
                 .Take(4)
                 .Select(x => x.Product)
                 .ToList();
@@ -667,7 +659,6 @@ namespace OnlineShopUniPi.Controllers
                 .Include(p => p.ProductImages)
                 .Include(p => p.Favorites)
                 .Include(p => p.OrderItems)
-                .Include(p => p.SellerReviews)
                 .FirstOrDefaultAsync(p => p.ProductId == id);
 
             if (product == null)
@@ -700,10 +691,6 @@ namespace OnlineShopUniPi.Controllers
             // Delete related OrderItems
             if (product.OrderItems != null)
                 _context.OrderItems.RemoveRange(product.OrderItems);
-
-            // Delete related SellerReviews
-            if (product.SellerReviews != null)
-                _context.SellerReviews.RemoveRange(product.SellerReviews);
 
             // Finally, delete the product itself
             _context.Products.Remove(product);

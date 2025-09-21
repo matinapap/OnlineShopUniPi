@@ -150,7 +150,7 @@ else
                     'Content-Type': 'application/json',
                     'RequestVerificationToken': getAntiForgeryToken()
                 },
-                body: JSON.stringify({ ProductId: productId, Quantity: parseInt(quantity) }) // κεφαλαία όπως στον controller
+                body: JSON.stringify({ ProductId: productId, Quantity: parseInt(quantity) }) 
             })
             .then(res => res.json())
             .then(data => {

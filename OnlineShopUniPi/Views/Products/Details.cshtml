@@ -6,7 +6,6 @@
     ViewData["Title"] = "Product Details";
     Layout = "~/Views/Shared/_Layout.cshtml";
 
-    // Καλάθι
     var cartJson = Context.Session.GetString("Cart");
     var cart = string.IsNullOrEmpty(cartJson)
         ? new Dictionary<int, int>()
@@ -15,13 +14,11 @@
     bool inCart = cart.ContainsKey(Model.ProductId);
     int quantityInCart = cart.ContainsKey(Model.ProductId) ? cart[Model.ProductId] : 1;
 
-    // Χρήστης
     var userIdValue = User.FindFirstValue(ClaimTypes.NameIdentifier);
     int.TryParse(userIdValue, out int currentUserId);
     bool isOwner = Model.UserId == currentUserId;
     bool isAuthenticated = User.Identity.IsAuthenticated;
 
-    // Αγαπημένα
     var favoriteProductIds = ViewData["FavoriteProductIds"] as List<int> ?? new List<int>();
     bool isFavorite = favoriteProductIds.Contains(Model.ProductId);
 }

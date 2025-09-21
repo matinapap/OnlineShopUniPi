@@ -35,13 +35,11 @@ namespace OnlineShopUniPi.Controllers
         }
 
         // Show orders that belong to the logged-in user's products
-        // Show orders that belong to the logged-in user's products
         [Authorize]
         public async Task<IActionResult> MyOrders(string filter = "Pending")
         {
             var userId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)!.Value);
 
-            // Πάρε όλες τις παραγγελίες που περιέχουν τουλάχιστον ένα προϊόν του χρήστη
             var ordersQuery = _context.Orders
                 .Include(o => o.OrderItems)
                     .ThenInclude(oi => oi.Product)
@@ -56,12 +54,10 @@ namespace OnlineShopUniPi.Controllers
 
             foreach (var order in orders)
             {
-                // Τα OrderItems που ανήκουν στον τρέχοντα χρήστη
                 var userOrderItems = order.OrderItems
                     .Where(oi => oi.Product.UserId == userId)
                     .ToList();
 
-                // Default status για τα OrderItems
                 foreach (var item in userOrderItems)
                 {
                     if (string.IsNullOrWhiteSpace(item.Status))
@@ -70,7 +66,6 @@ namespace OnlineShopUniPi.Controllers
 
                 if (filter == "Pending")
                 {
-                    // Εμφάνιση μόνο των OrderItems που είναι Processing
                     var pendingItems = userOrderItems
                         .Where(oi => oi.Status == "Processing")
                         .ToList();
@@ -90,12 +85,10 @@ namespace OnlineShopUniPi.Controllers
                 }
                 else if (filter == "History")
                 {
-                    // Εμφάνιση μόνο των OrderItems που δεν είναι Processing
                     var historyItems = userOrderItems
                         .Where(oi => oi.Status != "Processing")
                         .ToList();
 
-                    // Δημιουργούμε ξεχωριστές εγγραφές ανά status
                     foreach (var group in historyItems.GroupBy(oi => oi.Status))
                     {
                         resultOrders.Add(new Order
@@ -217,7 +210,6 @@ namespace OnlineShopUniPi.Controllers
 
                 var userId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)!.Value);
 
-                // Πάρε την παραγγελία και τα προϊόντα
                 var order = await _context.Orders
                     .Include(o => o.OrderItems)
                         .ThenInclude(oi => oi.Product)

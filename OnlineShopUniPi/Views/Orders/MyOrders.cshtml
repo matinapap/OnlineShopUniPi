@@ -116,7 +116,7 @@
 
                     const data = await response.json();
                     if (data.success) {
-                        location.reload(); // reload για να πάει στο History
+                        location.reload(); 
                     } else {
                         alert('Error updating order: ' + (data.message || ''));
                     }

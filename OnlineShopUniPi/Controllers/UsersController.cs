@@ -7,7 +7,6 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 
 
 namespace OnlineShopUniPi.Controllers
@@ -400,10 +399,8 @@ namespace OnlineShopUniPi.Controllers
             if (!User.IsInRole("Admin") && currentUserId != id)
                 return Forbid();
 
-            // Διαγραφή Favorites του χρήστη
             _context.Favorites.RemoveRange(user.Favorites);
 
-            // Διαγραφή Orders & OrderItems & Transactions
             foreach (var order in user.Orders)
             {
                 _context.OrderItems.RemoveRange(order.OrderItems);
@@ -411,17 +408,14 @@ namespace OnlineShopUniPi.Controllers
             }
             _context.Orders.RemoveRange(user.Orders);
 
-            // Διαγραφή Products του χρήστη
             foreach (var product in user.Products)
             {
                 _context.Favorites.RemoveRange(product.Favorites);
                 _context.OrderItems.RemoveRange(product.OrderItems);
                 _context.ProductImages.RemoveRange(product.ProductImages);
-                _context.SellerReviews.RemoveRange(product.SellerReviews);
             }
             _context.Products.RemoveRange(user.Products);
 
-            // Τέλος, διαγραφή του χρήστη
             _context.Users.Remove(user);
 
             await _context.SaveChangesAsync();

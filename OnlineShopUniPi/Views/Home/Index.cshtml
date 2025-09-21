@@ -53,7 +53,6 @@
     <section class="section personalized-section text-center">
         <h2 class="section-title">🎯 Personalized Recommendations</h2>
 
-        <!-- Φίλτρα -->
         <form class="filters-form mb-5 d-flex justify-content-center flex-wrap gap-3" id="filtersForm">
             <div class="filter-group">
                 <label for="sizeSelect" class="form-label">Size</label>
@@ -157,7 +156,6 @@
 
         const container = document.querySelector(".personalized-products-container");
 
-        // Populate categories ανάλογα με gender
         function populateCategories() {
             categorySelect.innerHTML = '<option value="">-- Select Category --</option>';
             let list = [];
@@ -183,7 +181,6 @@
         minPriceInput.addEventListener("input", fetchRecommendations);
         maxPriceInput.addEventListener("input", fetchRecommendations);
 
-        // AJAX request για recommendations
         function fetchRecommendations() {
             const params = new URLSearchParams({
                 size: sizeSelect.value,
@@ -196,7 +193,7 @@
             fetch(`/Products/FilteredRecommendations?${params.toString()}`)
                 .then(res => res.json())
                 .then(data => {
-                    container.innerHTML = ""; // καθάρισε τα παλιά
+                    container.innerHTML = ""; 
 
                     if (data.length === 0) {
                         container.innerHTML = "<p>No products found.</p>";

@@ -25,8 +25,6 @@ public partial class OnlineStoreDBContext : DbContext
 
     public virtual DbSet<ProductImage> ProductImages { get; set; }
 
-    public virtual DbSet<SellerReview> SellerReviews { get; set; }
-
     public virtual DbSet<Transaction> Transactions { get; set; }
 
     public virtual DbSet<User> Users { get; set; }
@@ -98,21 +96,6 @@ public partial class OnlineStoreDBContext : DbContext
             entity.HasOne(d => d.Product).WithMany(p => p.ProductImages)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK__ProductIm__produ__403A8C7D");
-        });
-
-        modelBuilder.Entity<SellerReview>(entity =>
-        {
-            entity.HasKey(e => e.ReviewId).HasName("PK__SellerRe__60883D9028548F10");
-
-            entity.Property(e => e.ReviewDate).HasDefaultValueSql("(getdate())");
-
-            entity.HasOne(d => d.Product).WithMany(p => p.SellerReviews)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__SellerRev__produ__4CA06362");
-
-            entity.HasOne(d => d.User).WithMany(p => p.SellerReviews)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__SellerRev__user___4D94879B");
         });
 
         modelBuilder.Entity<Transaction>(entity =>
