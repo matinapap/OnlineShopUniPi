@@ -1,71 +1,26 @@
 ﻿@{
     ViewData["Title"] = "Home Page";
     Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var isAuthenticated = User.Identity.IsAuthenticated;
 }
 
 <section class="hero-section">
     <h1>Welcome to ClothSwap!</h1>
     <p>Buy or sell clothes with style, safety, and convenience.</p>
-    <a <a asp-controller="Products" asp-action="GetProducts" class="cta-button">Get Started</a>
+    <a asp-controller="Products" asp-action="GetProducts" class="cta-button">Get Started</a>
 </section>
 
-<!-- Top Favorited Products Algorythm Section -->
+<!-- Top Favorited Products -->
 <section class="section">
     <h2>✨ Top Favorites</h2>
     @if (ViewBag.TopFavorited is List<OnlineShopUniPi.Models.Product> topFavorites && topFavorites.Any())
     {
-        <section class="section">
-            <div class="products">
-                @foreach (var item in topFavorites.Where(p => p.Quantity >= 1))
-                {
-                    // Get main image or placeholder
-                    var mainImage = item.ProductImages?.FirstOrDefault(img => img.IsMainImage == true)?.ImageUrl;
-
-                    // If no image found, use placeholder
-                    if (string.IsNullOrEmpty(mainImage))
-                    {
-                        mainImage = "images/resources/no_image.png";
-                    }
-
-                    <div class="product-card">
-                        <a href="@Url.Action("Details", "Products", new { id = item.ProductId })">
-                            <img src="@Url.Content("~/" + mainImage.TrimStart('/'))"
-                                 class="card-img-top p-3 object-fit-contain bg-light"
-                                 style="height:200px;"
-                                 alt="@item.Title" />
-                            <h3>@item.Title</h3>
-                            <p>€@item.Price</p>
-                        </a>
-                    </div>
-                }
-            </div>
-        </section>
-    }
-</section>
-
-<section class="about-section">
-    <h2>About Us</h2>
-    <p>
-        ClothSwap is a platform that brings fashion enthusiasts together in a vibrant and safe community. Through our app, registered users can buy and sell both new and pre-loved clothing, giving cherished pieces a second life. We provide a reliable environment, easy navigation, and dedicated support, ensuring that every transaction is simple, secure, and enjoyable. ClothSwap is more than just a marketplace — it’s a community that connects people who share a passion for fashion and sustainability.
-    </p>
-</section>
-
-<!-- Recent Products Section -->
-<section class="section">
-    <h2>Latest Additions</h2>
-    @if (ViewBag.LatestProducts is List<OnlineShopUniPi.Models.Product> latestProducts && latestProducts.Any())
-    {
-        <div class="products">
-            @foreach (var item in latestProducts.Where(p => p.Quantity >= 1)) // only show in-stock items
+        <div class="products d-flex flex-wrap gap-3">
+            @foreach (var item in topFavorites.Where(p => p.Quantity >= 1))
             {
-                // Get main image or placeholder
-                var mainImage = item.ProductImages?.FirstOrDefault(img => img.IsMainImage == true)?.ImageUrl;
-
-                // Use placeholder if no image exists
-                if (string.IsNullOrEmpty(mainImage))
-                {
-                    mainImage = "images/resources/no_image.png"; 
-                }
+                var mainImage = item.ProductImages?.FirstOrDefault(img => img.IsMainImage == true)?.ImageUrl
+                ?? "images/resources/no_image.png";
 
                 <div class="product-card">
                     <a href="@Url.Action("Details", "Products", new { id = item.ProductId })">
@@ -80,8 +35,192 @@
             }
         </div>
     }
-    else
-    {
-        <p>No recent products available.</p>
-    }
 </section>
+
+<section class="about-section">
+    <h2>About Us</h2>
+    <p>
+        ClothSwap is a platform that brings fashion enthusiasts together in a vibrant and safe community.
+        Through our app, registered users can buy and sell both new and pre-loved clothing, giving cherished
+        pieces a second life. We provide a reliable environment, easy navigation, and dedicated support,
+        ensuring that every transaction is simple, secure, and enjoyable. ClothSwap is more than just a
+        marketplace — it’s a community that connects people who share a passion for fashion and sustainability.
+    </p>
+</section>
+
+@if (isAuthenticated)
+{
+    <section class="section">
+        <h2>🎯 Personalized Recommendations</h2>
+
+        <!-- Φίλτρα -->
+        <form class="filters-form mb-4" id="filtersForm">
+            <div class="row g-3">
+                <div class="col-md-2">
+                    <label for="sizeSelect" class="form-label">Size</label>
+                    <select id="sizeSelect" class="form-select">
+                        <option value="">All</option>
+                        <option value="S">S</option>
+                        <option value="M">M</option>
+                        <option value="L">L</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label for="genderSelect" class="form-label">Gender</label>
+                    <select id="genderSelect" class="form-select">
+                        <option value="">All</option>
+                        <option value="Men">Men</option>
+                        <option value="Women">Women</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="categorySelect" class="form-label">Category</label>
+                    <select id="categorySelect" class="form-select" disabled>
+                        <option value="">-- Select Category --</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Price Range (€)</label>
+                    <div class="d-flex gap-2">
+                        <input type="number" id="minPrice" class="form-control" placeholder="Min" min="0" />
+                        <input type="number" id="maxPrice" class="form-control" placeholder="Max" min="0" />
+                    </div>
+                </div>
+            </div>
+        </form>
+
+        <div class="personalized-products-container d-flex flex-wrap gap-3">
+            @if (ViewData["RecommendedProducts"] is List<dynamic> recommendedProducts && recommendedProducts.Any())
+            {
+                @foreach (var item in recommendedProducts)
+                {
+                    var mainImage = item.ImageUrl ?? "images/resources/no_image.png";
+
+                    <div class="product-card">
+                        <a href="@Url.Action("Details", "Products", new { id = item.ProductId })">
+                            <img src="@Url.Content("~/" + mainImage.TrimStart('/'))"
+                                 class="card-img-top p-3 object-fit-contain bg-light"
+                                 style="height:200px;"
+                                 alt="@item.Title" />
+                            <h3>@item.Title</h3>
+                            <p>€@item.Price</p>
+                        </a>
+                    </div>
+                }
+            }
+        </div>
+    </section>
+}else
+{
+    <section class="section">
+        <h2>Latest Additions</h2>
+        @if (ViewBag.LatestProducts is List<OnlineShopUniPi.Models.Product> latestProducts && latestProducts.Any())
+        {
+            <div class="products d-flex flex-wrap gap-3">
+                @foreach (var item in latestProducts.Where(p => p.Quantity >= 1))
+                {
+                    var mainImage = item.ProductImages?.FirstOrDefault(img => img.IsMainImage == true)?.ImageUrl
+                    ?? "images/resources/no_image.png";
+
+                    <div class="product-card">
+                        <a href="@Url.Action("Details", "Products", new { id = item.ProductId })">
+                            <img src="@Url.Content("~/" + mainImage.TrimStart('/'))"
+                                 class="card-img-top p-3 object-fit-contain bg-light"
+                                 style="height:200px;"
+                                 alt="@item.Title" />
+                            <h3>@item.Title</h3>
+                            <p>€@item.Price</p>
+                        </a>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <p>No recent products available.</p>
+        }
+    </section>
+}
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const maleClothes = ["Shirts", "T-shirts / Tops", "Sweaters and Hoodies", "Jackets / Coats", "Jeans and Pants", "Other"];
+        const femaleClothes = ["Dresses and bodysuits", "T-shirts / Tops", "Jackets / Coats", "Shirts and blouses", "Pants / Trousers", "Jeans", "Hoodies / Sweatshirts", "Skirts and shorts", "Other"];
+
+        const genderSelect = document.getElementById("genderSelect");
+        const categorySelect = document.getElementById("categorySelect");
+        const sizeSelect = document.getElementById("sizeSelect");
+        const minPriceInput = document.getElementById("minPrice");
+        const maxPriceInput = document.getElementById("maxPrice");
+
+        const container = document.querySelector(".personalized-products-container");
+
+        // Populate categories ανάλογα με gender
+        function populateCategories() {
+            categorySelect.innerHTML = '<option value="">-- Select Category --</option>';
+            let list = [];
+            if (genderSelect.value === "Men") list = maleClothes;
+            if (genderSelect.value === "Women") list = femaleClothes;
+
+            list.forEach(c => {
+                const opt = document.createElement("option");
+                opt.value = c;
+                opt.text = c;
+                categorySelect.appendChild(opt);
+            });
+            categorySelect.disabled = list.length === 0;
+        }
+
+        genderSelect.addEventListener("change", () => {
+            populateCategories();
+            fetchRecommendations();
+        });
+
+        categorySelect.addEventListener("change", fetchRecommendations);
+        sizeSelect.addEventListener("change", fetchRecommendations);
+        minPriceInput.addEventListener("input", fetchRecommendations);
+        maxPriceInput.addEventListener("input", fetchRecommendations);
+
+        // AJAX request για recommendations
+        function fetchRecommendations() {
+            const params = new URLSearchParams({
+                size: sizeSelect.value,
+                gender: genderSelect.value,
+                category: categorySelect.value,
+                minPrice: minPriceInput.value,
+                maxPrice: maxPriceInput.value
+            });
+
+            fetch(`/Products/FilteredRecommendations?${params.toString()}`)
+                .then(res => res.json())
+                .then(data => {
+                    container.innerHTML = ""; // καθάρισε τα παλιά
+
+                    if (data.length === 0) {
+                        container.innerHTML = "<p>No products found.</p>";
+                        return;
+                    }
+
+                    data.forEach(item => {
+                        const card = document.createElement("div");
+                        card.classList.add("product-card");
+
+                        card.innerHTML = `
+                            <a href="/Products/Details/${item.productId}">
+                                <img src="${item.imageUrl}"
+                                     class="card-img-top p-3 object-fit-contain bg-light"
+                                     style="height:200px;"
+                                     alt="${item.title}" />
+                                <h3>${item.title}</h3>
+                                <p>€${item.price}</p>
+                            </a>`;
+                        container.appendChild(card);
+                    });
+                })
+                .catch(err => console.error("Error fetching recommendations:", err));
+        }
+
+        // Κάλεσέ το στην αρχή να φορτώσει recommendations
+        fetchRecommendations();
+    });
+</script>

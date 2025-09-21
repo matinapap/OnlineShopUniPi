@@ -205,6 +205,60 @@ namespace OnlineShopUniPi.Controllers
             return View(favoriteProducts);
         }
 
+        [HttpGet]
+        public async Task<IActionResult> FilteredRecommendations(string? size, string? gender, string? category, decimal? minPrice, decimal? maxPrice)
+        {
+            if (!User.Identity.IsAuthenticated)
+                return Json(new List<object>());
+
+            int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int currentUserId);
+
+            var purchasedIds = await _context.OrderItems
+                .Where(oi => oi.Order.UserId == currentUserId)
+                .Select(oi => oi.ProductId)
+                .ToListAsync();
+
+            var favoriteIds = await _context.Favorites
+                .Where(f => f.UserId == currentUserId)
+                .Select(f => f.ProductId)
+                .ToListAsync();
+
+            var products = await _context.Products.Include(p => p.ProductImages)
+                .Where(p => p.Quantity > 0)
+                .ToListAsync();
+
+            var scoredProducts = products
+     .Select(p =>
+     {
+         var mainImage = p.ProductImages.FirstOrDefault(img => img.IsMainImage == true)?.ImageUrl;
+         var imageUrl = string.IsNullOrEmpty(mainImage) ? "/images/resources/no_image.png" :  mainImage;
+
+         // Debug output
+         Console.WriteLine($"ProductId: {p.ProductId}, Title: {p.Title}, ImageUrl: {imageUrl}");
+
+         return new
+         {
+             p.ProductId,
+             p.Title,
+             p.Price,
+             ImageUrl = imageUrl,
+             Score = (purchasedIds.Contains(p.ProductId) ? 1 : 0)
+                   + (favoriteIds.Contains(p.ProductId) ? 1 : 0)
+         };
+     })
+     .OrderByDescending(x => x.Score)
+     .ThenBy(x => Guid.NewGuid())
+     .Take(5)
+     .ToList();
+
+
+
+
+            return Json(scoredProducts);
+
+        }
+
+
         // GET: Products
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Index(int? productId)
@@ -262,43 +316,57 @@ namespace OnlineShopUniPi.Controllers
         }
 
         // GET: Products/Details/5
-        public async Task<IActionResult> Details(int? id)
+        [HttpGet]
+        public async Task<IActionResult> Details(int id)
         {
-            if (id == null || _context.Products == null)
-            {
-                return NotFound();
-            }
-
-            // Get the current user's role
-            var isAdmin = User.IsInRole("Admin");
-
-            // Retrieve the product with the specified ID
-            // Include related User and ProductImages entities
             var product = await _context.Products
-                .Include(p => p.User)
                 .Include(p => p.ProductImages)
-                .FirstOrDefaultAsync(m => m.ProductId == id &&
-                                          (isAdmin || m.Quantity >= 1)); // Admins can see all, others only Quantity >= 1
+                .Include(p => p.User)
+                .FirstOrDefaultAsync(p => p.ProductId == id);
 
-            // If the product was not found (or user is not allowed to see it), return 404 Not Found
             if (product == null)
-            {
                 return NotFound();
-            }
 
-            List<int> favoriteProductIds = new List<int>();
-            if (User.Identity.IsAuthenticated)
-            {
-                var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
-                favoriteProductIds = await _context.Favorites
-                    .Where(f => f.UserId == userId)
-                    .Select(f => f.ProductId)
-                    .ToListAsync();
-            }
+            int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int currentUserId);
 
-            ViewData["FavoriteProductIds"] = favoriteProductIds;
+            // Όλα τα διαθέσιμα προϊόντα εκτός του τρέχοντος
+            var allProducts = await _context.Products
+                .Include(p => p.ProductImages)
+                .Where(p => p.ProductId != id && p.Quantity > 0)
+                .ToListAsync();
 
-            // Return the product details view
+            // Προϊόντα που έχει αγοράσει ο χρήστης
+            var purchasedIds = await _context.OrderItems
+                .Where(oi => oi.Order.UserId == currentUserId)
+                .Select(oi => oi.ProductId)
+                .ToListAsync();
+
+            // Αγαπημένα του χρήστη
+            var favoriteIds = await _context.Favorites
+                .Where(f => f.UserId == currentUserId)
+                .Select(f => f.ProductId)
+                .ToListAsync();
+
+            // Υπολογισμός σκορ για personalization
+            var scoredProducts = allProducts
+                .Select(p => new
+                {
+                    Product = p,
+                    Score = (p.Category == product.Category ? 3 : 0)
+                          + (p.Gender == product.Gender ? 2 : 0)
+                          + (purchasedIds.Contains(p.ProductId) ? 1 : 0)
+                          + (favoriteIds.Contains(p.ProductId) ? 1 : 0)
+                })
+                .Where(x => x.Score > 0) // φιλτράρουμε προϊόντα με 0 σκορ
+                .OrderByDescending(x => x.Score)
+                .ThenBy(x => Guid.NewGuid()) // για τυχαιοποίηση ανάμεσα σε ισοβαθμούντες
+                .Take(4)
+                .Select(x => x.Product)
+                .ToList();
+
+            ViewData["FavoriteProductIds"] = favoriteIds;
+            ViewData["RecommendedProducts"] = scoredProducts;
+
             return View(product);
         }
 
