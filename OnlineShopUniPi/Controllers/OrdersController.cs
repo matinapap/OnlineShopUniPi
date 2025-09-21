@@ -35,50 +35,94 @@ namespace OnlineShopUniPi.Controllers
         }
 
         // Show orders that belong to the logged-in user's products
+        // Show orders that belong to the logged-in user's products
         [Authorize]
         public async Task<IActionResult> MyOrders(string filter = "Pending")
         {
-            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var userId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)!.Value);
 
-            // Get all orders that include at least one product owned by this user
+            // Πάρε όλες τις παραγγελίες που περιέχουν τουλάχιστον ένα προϊόν του χρήστη
             var ordersQuery = _context.Orders
                 .Include(o => o.OrderItems)
                     .ThenInclude(oi => oi.Product)
                         .ThenInclude(p => p.ProductImages)
                 .Where(o => o.OrderItems.Any(oi => oi.Product.UserId == userId));
 
-            // Filter pending vs history
-            if (filter == "Pending")
-            {
-                ordersQuery = ordersQuery.Where(o => o.OrderStatus == "Processing");
-            }
-            else if (filter == "History")
-            {
-                ordersQuery = ordersQuery.Where(o => o.OrderStatus != "Processing");
-            }
-
             var orders = await ordersQuery
-            .OrderByDescending(o => o.OrderDate)
-            .ToListAsync();
+                .OrderByDescending(o => o.OrderDate)
+                .ToListAsync();
+
+            var resultOrders = new List<Order>();
 
             foreach (var order in orders)
             {
-                order.OrderItems = order.OrderItems
+                // Τα OrderItems που ανήκουν στον τρέχοντα χρήστη
+                var userOrderItems = order.OrderItems
                     .Where(oi => oi.Product.UserId == userId)
                     .ToList();
+
+                // Default status για τα OrderItems
+                foreach (var item in userOrderItems)
+                {
+                    if (string.IsNullOrWhiteSpace(item.Status))
+                        item.Status = "Processing";
+                }
+
+                if (filter == "Pending")
+                {
+                    // Εμφάνιση μόνο των OrderItems που είναι Processing
+                    var pendingItems = userOrderItems
+                        .Where(oi => oi.Status == "Processing")
+                        .ToList();
+
+                    if (pendingItems.Any())
+                    {
+                        resultOrders.Add(new Order
+                        {
+                            OrderId = order.OrderId,
+                            UserId = order.UserId,
+                            OrderDate = order.OrderDate,
+                            ShippingAddress = order.ShippingAddress,
+                            OrderItems = pendingItems,
+                            OrderStatus = "Processing"
+                        });
+                    }
+                }
+                else if (filter == "History")
+                {
+                    // Εμφάνιση μόνο των OrderItems που δεν είναι Processing
+                    var historyItems = userOrderItems
+                        .Where(oi => oi.Status != "Processing")
+                        .ToList();
+
+                    // Δημιουργούμε ξεχωριστές εγγραφές ανά status
+                    foreach (var group in historyItems.GroupBy(oi => oi.Status))
+                    {
+                        resultOrders.Add(new Order
+                        {
+                            OrderId = order.OrderId,
+                            UserId = order.UserId,
+                            OrderDate = order.OrderDate,
+                            ShippingAddress = order.ShippingAddress,
+                            OrderItems = group.ToList(),
+                            OrderStatus = group.Key
+                        });
+                    }
+                }
             }
 
             ViewBag.Filter = filter;
-            return View(orders);
+            return View(resultOrders
+                .OrderByDescending(o => o.OrderDate)
+                .ToList());
         }
 
-        // Purchases made by the logged-in user
+
         [Authorize]
         public async Task<IActionResult> MyPurchases(string filter = "Pending")
         {
-            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var userId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)!.Value);
 
-            // Query the user's orders, excluding their own products
             var purchasesQuery = _context.Orders
                 .Include(o => o.OrderItems)
                     .ThenInclude(oi => oi.Product)
@@ -86,22 +130,72 @@ namespace OnlineShopUniPi.Controllers
                 .Where(o => o.UserId == userId)
                 .Where(o => o.OrderItems.Any(oi => oi.Product.UserId != userId));
 
-            // Filter by Pending or History based on order status
-            if (filter == "Pending")
-                purchasesQuery = purchasesQuery.Where(o => o.OrderStatus == "Processing");
-            else if (filter == "History")
-                purchasesQuery = purchasesQuery.Where(o => o.OrderStatus != "Processing");
-
-            // Execute query and order by most recent first
             var purchases = await purchasesQuery
                 .OrderByDescending(o => o.OrderDate)
                 .ToListAsync();
 
-            // Store the selected filter in ViewBag for use in the view
-            ViewBag.Filter = filter;
+            var resultOrders = new List<Order>();
 
-            return View(purchases);
+            foreach (var order in purchases)
+            {
+                // Keep only the products that are not owned by the user
+                var userOrderItems = order.OrderItems
+                    .Where(oi => oi.Product.UserId != userId)
+                    .ToList();
+
+                // Set default status if null
+                foreach (var item in userOrderItems)
+                {
+                    if (string.IsNullOrWhiteSpace(item.Status))
+                        item.Status = "Processing";
+                }
+
+                if (filter == "Pending")
+                {
+                    // Pending: show only Processing items
+                    var pendingItems = userOrderItems.Where(oi => oi.Status == "Processing").ToList();
+                    if (pendingItems.Any())
+                    {
+                        resultOrders.Add(new Order
+                        {
+                            OrderId = order.OrderId,
+                            UserId = order.UserId,
+                            TotalPrice = order.TotalPrice,
+                            OrderDate = order.OrderDate,
+                            ShippingAddress = order.ShippingAddress,
+                            OrderItems = pendingItems,
+                            OrderStatus = "Processing"
+                        });
+                    }
+                }
+                else if (filter == "History")
+                {
+                    // History: group by Status, create separate Order "copies" per status
+                    var grouped = userOrderItems
+                        .Where(oi => oi.Status != "Processing")
+                        .GroupBy(oi => oi.Status);
+
+                    foreach (var group in grouped)
+                    {
+                        resultOrders.Add(new Order
+                        {
+                            OrderId = order.OrderId,
+                            UserId = order.UserId,
+                            TotalPrice = order.TotalPrice,
+                            OrderDate = order.OrderDate,
+                            ShippingAddress = order.ShippingAddress,
+                            OrderItems = group.ToList(),
+                            OrderStatus = group.Key
+                        });
+                    }
+                }
+            }
+
+            ViewBag.Filter = filter;
+            return View(resultOrders.OrderByDescending(o => o.OrderDate).ToList());
         }
+
+
 
 
         // Update order status (AJAX call with JSON body)
@@ -119,35 +213,43 @@ namespace OnlineShopUniPi.Controllers
                 }
 
                 int orderId = orderIdProp.GetInt32();
-                string status = statusProp.GetString();
+                string newStatus = statusProp.GetString() ?? "";
 
-                // Find order including OrderItems and Product
+                var userId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)!.Value);
+
+                // Πάρε την παραγγελία και τα προϊόντα
                 var order = await _context.Orders
-                .Include(o => o.OrderItems)
-                    .ThenInclude(oi => oi.Product)
-                .FirstOrDefaultAsync(o => o.OrderId == orderId);
+                    .Include(o => o.OrderItems)
+                        .ThenInclude(oi => oi.Product)
+                    .FirstOrDefaultAsync(o => o.OrderId == orderId);
 
                 if (order == null)
-                {
                     return Json(new { success = false, message = "Order not found." });
-                }
 
-                // If status is being changed to Cancelled, return stock quantities
-                if (status == "Cancelled" && order.OrderStatus != "Cancelled")
+                // Update only the OrderItems of the current user
+                foreach (var item in order.OrderItems.Where(oi => oi.Product.UserId == userId))
                 {
-                    foreach (var item in order.OrderItems)
+                    item.Status = newStatus;
+
+                    if (newStatus == "Cancelled" && item.Product != null)
                     {
-                        if (item.Product != null)
-                        {
-                            item.Product.Quantity += item.Quantity; // restore stock
-                        }
+                        item.Product.Quantity += item.Quantity;
                     }
                 }
 
-                // Update order status
-                order.OrderStatus = status;
-                await _context.SaveChangesAsync();
+                // Recalculate the bundle status for this user
+                var userStatuses = order.OrderItems
+                    .Where(oi => oi.Product.UserId == userId)
+                    .Select(oi => oi.Status)
+                    .Distinct()
+                    .ToList();
 
+                if (userStatuses.Count == 1)
+                    order.OrderStatus = userStatuses[0];
+                else
+                    order.OrderStatus = "Processing";
+
+                await _context.SaveChangesAsync();
                 return Json(new { success = true });
             }
             catch (Exception ex)
@@ -155,6 +257,7 @@ namespace OnlineShopUniPi.Controllers
                 return Json(new { success = false, message = ex.Message });
             }
         }
+
 
         // Checkout: create order and transaction
         [HttpPost]

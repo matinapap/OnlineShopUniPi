@@ -1,4 +1,5 @@
 ﻿@model List<OnlineShopUniPi.Models.Product>
+@using System.Security.Claims
 
 @{
     ViewData["Title"] = "Clothes";
@@ -7,6 +8,10 @@
     var selectedGender = ViewBag.SelectedGender as string ?? "Women";
     var selectedCategory = ViewBag.SelectedCategory as string;
     var favoriteProductIds = ViewBag.FavoriteProductIds as List<int> ?? new List<int>();
+
+    var currentUserId = User.Identity.IsAuthenticated
+                        ? int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value)
+                        : (int?)null;
 }
 
 <!-- Hidden form used only to store the CSRF (anti-forgery) token, so it can be retrieved via JavaScript when making AJAX requests. -->
@@ -113,15 +118,18 @@
                                     var isFavorite = favoriteProductIds.Contains(item.ProductId);
                                 }
 
-                                <button type="button"
-                                        class="btn btn-sm btn-light position-absolute top-0 end-0 m-2 favorite-toggle"
-                                        data-product-id="@item.ProductId"
-                                        title="Αγαπημένο"
-                                        style="z-index: 1050;"
-                                        onclick="toggleHeart(this, event)">
-                                    <i class="bi @(isFavorite ? "bi-heart-fill" : "bi-heart") text-danger border border-dark rounded-circle p-1"
-                                       style="font-size: 1.2rem;@(isFavorite ? " color:red;" : "")"></i>
-                                </button>
+                                @if (currentUserId.HasValue && currentUserId.Value != item.UserId)
+                                {
+                                    <button type="button"
+                                            class="btn btn-sm btn-light position-absolute top-0 end-0 m-2 favorite-toggle"
+                                            data-product-id="@item.ProductId"
+                                            title="Αγαπημένο"
+                                            style="z-index: 1050;"
+                                            onclick="toggleHeart(this, event)">
+                                        <i class="bi @(favoriteProductIds.Contains(item.ProductId) ? "bi-heart-fill" : "bi-heart") text-danger border border-dark rounded-circle p-1"
+                                           style="font-size: 1.2rem;@(favoriteProductIds.Contains(item.ProductId) ? " color:red;" : "")"></i>
+                                    </button>
+                                }
 
                             </div>
 

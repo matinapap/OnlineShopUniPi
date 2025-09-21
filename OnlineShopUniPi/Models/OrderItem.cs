@@ -24,6 +24,11 @@ public partial class OrderItem
     [Column("price", TypeName = "decimal(10, 2)")]
     public decimal Price { get; set; }
 
+    [Column("status")]
+    [StringLength(50)]
+    [Unicode(false)]
+    public string? Status { get; set; }
+
     [ForeignKey("OrderId")]
     [InverseProperty("OrderItems")]
     public virtual Order Order { get; set; } = null!;
