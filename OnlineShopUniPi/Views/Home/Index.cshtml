@@ -50,63 +50,65 @@
 
 @if (isAuthenticated)
 {
-    <section class="section">
-        <h2>🎯 Personalized Recommendations</h2>
+    <section class="section personalized-section text-center">
+        <h2 class="section-title">🎯 Personalized Recommendations</h2>
 
         <!-- Φίλτρα -->
-        <form class="filters-form mb-4" id="filtersForm">
-            <div class="row g-3">
-                <div class="col-md-2">
-                    <label for="sizeSelect" class="form-label">Size</label>
-                    <select id="sizeSelect" class="form-select">
-                        <option value="">All</option>
-                        <option value="S">S</option>
-                        <option value="M">M</option>
-                        <option value="L">L</option>
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <label for="genderSelect" class="form-label">Gender</label>
-                    <select id="genderSelect" class="form-select">
-                        <option value="">All</option>
-                        <option value="Men">Men</option>
-                        <option value="Women">Women</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label for="categorySelect" class="form-label">Category</label>
-                    <select id="categorySelect" class="form-select" disabled>
-                        <option value="">-- Select Category --</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label">Price Range (€)</label>
-                    <div class="d-flex gap-2">
-                        <input type="number" id="minPrice" class="form-control" placeholder="Min" min="0" />
-                        <input type="number" id="maxPrice" class="form-control" placeholder="Max" min="0" />
-                    </div>
+        <form class="filters-form mb-5 d-flex justify-content-center flex-wrap gap-3" id="filtersForm">
+            <div class="filter-group">
+                <label for="sizeSelect" class="form-label">Size</label>
+                <select id="sizeSelect" class="form-select">
+                    <option value="">All</option>
+                    <option value="S">S</option>
+                    <option value="M">M</option>
+                    <option value="L">L</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="genderSelect" class="form-label">Gender</label>
+                <select id="genderSelect" class="form-select">
+                    <option value="">All</option>
+                    <option value="Men">Men</option>
+                    <option value="Women">Women</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="categorySelect" class="form-label">Category</label>
+                <select id="categorySelect" class="form-select" disabled>
+                    <option value="">-- Select Category --</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label class="form-label">Price Range (€)</label>
+                <div class="d-flex gap-2">
+                    <input type="number" id="minPrice" class="form-control" placeholder="Min" min="0" />
+                    <input type="number" id="maxPrice" class="form-control" placeholder="Max" min="0" />
                 </div>
             </div>
         </form>
 
-        <div class="personalized-products-container d-flex flex-wrap gap-3">
+        <div class="personalized-products-container d-flex justify-content-center flex-wrap gap-4">
             @if (ViewData["RecommendedProducts"] is List<dynamic> recommendedProducts && recommendedProducts.Any())
             {
                 @foreach (var item in recommendedProducts)
                 {
                     var mainImage = item.ImageUrl ?? "images/resources/no_image.png";
 
-                    <div class="product-card">
-                        <a href="@Url.Action("Details", "Products", new { id = item.ProductId })">
+                    <div class="product-card p-3 bg-white rounded shadow-sm text-center" style="width: 220px;">
+                        <a href="@Url.Action("Details", "Products", new { id = item.ProductId })" class="text-decoration-none text-dark">
                             <img src="@Url.Content("~/" + mainImage.TrimStart('/'))"
-                                 class="card-img-top p-3 object-fit-contain bg-light"
+                                 class="card-img-top mb-3 object-fit-contain bg-light rounded"
                                  style="height:200px;"
                                  alt="@item.Title" />
-                            <h3>@item.Title</h3>
-                            <p>€@item.Price</p>
+                            <h3 class="h6 mb-2">@item.Title</h3>
+                            <p class="fw-bold mb-0">€@item.Price</p>
                         </a>
                     </div>
                 }
+            }
+            else
+            {
+                <p>No recommended products found.</p>
             }
         </div>
     </section>
@@ -220,7 +222,6 @@
                 .catch(err => console.error("Error fetching recommendations:", err));
         }
 
-        // Κάλεσέ το στην αρχή να φορτώσει recommendations
         fetchRecommendations();
     });
 </script>

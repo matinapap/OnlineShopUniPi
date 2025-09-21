@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using OnlineShopUniPi.Helpers;
 using OnlineShopUniPi.Models;
+using static NuGet.Packaging.PackagingConstants;
 
 namespace OnlineShopUniPi.Controllers
 {
@@ -57,11 +58,17 @@ namespace OnlineShopUniPi.Controllers
             }
 
             var orders = await ordersQuery
-                .OrderByDescending(o => o.OrderDate)
-                .ToListAsync();
+            .OrderByDescending(o => o.OrderDate)
+            .ToListAsync();
+
+            foreach (var order in orders)
+            {
+                order.OrderItems = order.OrderItems
+                    .Where(oi => oi.Product.UserId == userId)
+                    .ToList();
+            }
 
             ViewBag.Filter = filter;
-
             return View(orders);
         }
 
