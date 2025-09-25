@@ -205,53 +205,204 @@ namespace OnlineShopUniPi.Controllers
             return View(favoriteProducts);
         }
 
+
+        //------------ Algorythm for personalized product recommendations ------------
         [HttpGet]
         public async Task<IActionResult> FilteredRecommendations(string? size, string? gender, string? category, decimal? minPrice, decimal? maxPrice)
         {
+            // 1) If the user is not logged in, return an empty JSON array
             if (!User.Identity.IsAuthenticated)
                 return Json(new List<object>());
 
+            // 2) Extract the current logged-in user ID from the claims
             int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int currentUserId);
 
+            // 3) Get product IDs that the user has already purchased
             var purchasedIds = await _context.OrderItems
                 .Where(oi => oi.Order.UserId == currentUserId)
                 .Select(oi => oi.ProductId)
                 .ToListAsync();
 
+            // 4) Get product IDs that the user has added to favorites
             var favoriteIds = await _context.Favorites
                 .Where(f => f.UserId == currentUserId)
                 .Select(f => f.ProductId)
                 .ToListAsync();
 
-            var products = await _context.Products.Include(p => p.ProductImages)
-                .Where(p => p.Quantity > 0)
+            // --- Collect category preferences from purchased & favorite products ---
+
+            // Helper function: normalize category strings (lowercase, trimmed, non-null)
+            Func<string?, string> normalize = s => string.IsNullOrWhiteSpace(s) ? "" : s.Trim().ToLowerInvariant();
+
+            // All categories from purchased products
+            var purchasedCategoriesRaw = await _context.OrderItems
+                .Where(oi => oi.Order.UserId == currentUserId)
+                .Select(oi => oi.Product.Category)
+                .Where(c => c != null)
                 .ToListAsync();
 
-            var scoredProducts = products
-             .Select(p =>
-             {
-                 var mainImage = p.ProductImages.FirstOrDefault(img => img.IsMainImage == true)?.ImageUrl;
-                 var imageUrl = string.IsNullOrEmpty(mainImage) ? "/images/resources/no_image.png" :  mainImage;
+            // All categories from favorite products
+            var favoriteCategoriesRaw = await _context.Favorites
+                .Where(f => f.UserId == currentUserId)
+                .Select(f => f.Product.Category)
+                .Where(c => c != null)
+                .ToListAsync();
 
-                 Console.WriteLine($"ProductId: {p.ProductId}, Title: {p.Title}, ImageUrl: {imageUrl}");
+            // Count how many times each category appears in purchases
+            var purchasedCategoryCounts = purchasedCategoriesRaw
+                .Select(normalize)
+                .Where(s => s != "")
+                .GroupBy(s => s)
+                .ToDictionary(g => g.Key, g => g.Count());
 
-                 return new
-                 {
-                     p.ProductId,
-                     p.Title,
-                     p.Price,
-                     ImageUrl = imageUrl,
-                     Score = (purchasedIds.Contains(p.ProductId) ? 1 : 0)
-                           + (favoriteIds.Contains(p.ProductId) ? 1 : 0)
-                 };
-             })
-             .OrderByDescending(x => x.Score)
-             .ThenBy(x => Guid.NewGuid())
-             .Take(5)
-             .ToList();
+            // Count how many times each category appears in favorites
+            var favoriteCategoryCounts = favoriteCategoriesRaw
+                .Select(normalize)
+                .Where(s => s != "")
+                .GroupBy(s => s)
+                .ToDictionary(g => g.Key, g => g.Count());
 
-            return Json(scoredProducts);
+            // --- Fetch all available products (with images) ---
+            var allProducts = await _context.Products
+                .Include(p => p.ProductImages)
+                .Where(p => p.Quantity > 0) // only products in stock
+                .ToListAsync();
 
+            // --- Normalize user filters (soft preferences, not strict filters) ---
+            var sizeNorm = string.IsNullOrWhiteSpace(size) ? null : size.Trim();
+            var genderNorm = string.IsNullOrWhiteSpace(gender) ? null : gender.Trim();
+            var categoryNorm = string.IsNullOrWhiteSpace(category) ? null : category.Trim().ToLowerInvariant();
+
+            // --- Function to compute a "relevance score" for each product ---
+            Func<Product, double> computeScore = p =>
+            {
+                double score = 0;
+                var pCat = normalize(p.Category);
+
+                // (A) Score boost for matching categories with purchased/favorite history
+                if (!string.IsNullOrEmpty(pCat))
+                {
+                    if (purchasedCategoryCounts.TryGetValue(pCat, out int pc))
+                        score += pc * 3.0;  // Purchases weigh more (×3)
+                    if (favoriteCategoryCounts.TryGetValue(pCat, out int fc))
+                        score += fc * 1.0;  // Favorites weigh less (×1)
+                }
+
+                // (B) Bonus points if product matches user-selected filters (soft match)
+                if (!string.IsNullOrEmpty(categoryNorm) && pCat == categoryNorm)
+                    score += 2.0;
+
+                if (!string.IsNullOrEmpty(sizeNorm) && !string.IsNullOrEmpty(p.Size) &&
+                    string.Equals(p.Size.Trim(), sizeNorm, StringComparison.OrdinalIgnoreCase))
+                    score += 1.0;
+
+                if (!string.IsNullOrEmpty(genderNorm) && !string.IsNullOrEmpty(p.Gender) &&
+                    string.Equals(p.Gender.Trim(), genderNorm, StringComparison.OrdinalIgnoreCase))
+                    score += 0.8;
+
+                // (C) Price range scoring (exact match > near match)
+                if (minPrice.HasValue && maxPrice.HasValue)
+                {
+                    // Inside the given price range → full bonus
+                    if (p.Price >= minPrice.Value && p.Price <= maxPrice.Value)
+                        score += 1.2;
+                    else
+                    {
+                        // Allow 20% tolerance outside of range → smaller bonus
+                        var lower = minPrice.Value - (minPrice.Value * 0.20m);
+                        var upper = maxPrice.Value + (maxPrice.Value * 0.20m);
+                        if (p.Price >= lower && p.Price <= upper)
+                            score += 0.6;
+                    }
+                }
+                else if (minPrice.HasValue)
+                {
+                    if (p.Price >= minPrice.Value) score += 0.8;
+                }
+                else if (maxPrice.HasValue)
+                {
+                    if (p.Price <= maxPrice.Value) score += 0.8;
+                }
+
+                return score;
+            };
+
+            // --- STEP 1: Candidate products (exclude purchased & favorite ones first) ---
+            var candidates = allProducts
+                .Where(p => !purchasedIds.Contains(p.ProductId) && !favoriteIds.Contains(p.ProductId))
+                .ToList();
+
+            // --- STEP 2: Compute scores & select top 5 recommendations ---
+            var recommended = candidates
+                .Select(p => new
+                {
+                    Product = p,
+                    ImageUrl = p.ProductImages.FirstOrDefault(img => img.IsMainImage == true)?.ImageUrl
+                               ?? "/images/resources/no_image.png",
+                    Score = computeScore(p)
+                })
+                .Where(x => x.Score > 0) // Only recommend products with positive score
+                .OrderByDescending(x => x.Score) // Higher score first
+                .ThenBy(_ => Guid.NewGuid())     // Randomize tie cases
+                .Take(5)
+                .ToList();
+
+            // --- STEP 3: If fewer than 5, allow favorite products (fallback) ---
+            if (recommended.Count < 5)
+            {
+                var moreFromFavorites = allProducts
+                    .Where(p => !purchasedIds.Contains(p.ProductId)
+                                && favoriteIds.Contains(p.ProductId)
+                                && recommended.All(r => r.Product.ProductId != p.ProductId))
+                    .Select(p => new
+                    {
+                        Product = p,
+                        ImageUrl = p.ProductImages.FirstOrDefault(img => img.IsMainImage == true)?.ImageUrl
+                                   ?? "/images/resources/no_image.png",
+                        Score = computeScore(p) + 1.0 // Add small bonus for favorites
+                    })
+                    .OrderByDescending(x => x.Score)
+                    .ThenBy(_ => Guid.NewGuid())
+                    .Take(5 - recommended.Count)
+                    .ToList();
+
+                recommended.AddRange(moreFromFavorites);
+            }
+
+            // --- STEP 4: Final fallback → fill remaining slots with random products ---
+            if (recommended.Count < 5)
+            {
+                var alreadyIds = recommended.Select(r => r.Product.ProductId).ToHashSet();
+                var fallback = allProducts
+                    .Where(p => !purchasedIds.Contains(p.ProductId) && !alreadyIds.Contains(p.ProductId))
+                    .OrderBy(_ => Guid.NewGuid())
+                    .Take(5 - recommended.Count)
+                    .Select(p => new
+                    {
+                        Product = p,
+                        ImageUrl = p.ProductImages.FirstOrDefault(img => img.IsMainImage == true)?.ImageUrl
+                                   ?? "/images/resources/no_image.png",
+                        Score = 0.0 // Fallback items have no score
+                    })
+                    .ToList();
+
+                recommended.AddRange(fallback);
+            }
+
+            // --- STEP 5: Shape final JSON output (limit to 5 items) ---
+            var final = recommended
+                .Take(5)
+                .Select(r => new
+                {
+                    r.Product.ProductId,
+                    r.Product.Title,
+                    r.Product.Price,
+                    ImageUrl = r.ImageUrl,
+                    Score = Math.Round(r.Score, 2)
+                })
+                .ToList();
+
+            return Json(final);
         }
 
 
