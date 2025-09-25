@@ -19,9 +19,10 @@ namespace OnlineShopUniPi.Controllers
             _webHostEnvironment = webHostEnvironment;
         }
 
-        // Algorythm to get the top 10 most favorited products
+        
         public async Task<IActionResult> Index()
         {
+            //------------ Algorythm for getting top 10 most favorited products ------------ 
             // Fetch top 10 most favorited products
             var topFavoritedProducts = await _context.Products
                 .Include(p => p.ProductImages) // Load product images

@@ -462,10 +462,12 @@ namespace OnlineShopUniPi.Controllers
             }
         }
 
+        //------------ Algorythm for getting suggestions under a product ------------ 
         // GET: Products/Details/5
         [HttpGet]
         public async Task<IActionResult> Details(int id)
         {
+            // 1) Get the current product (including its images and owner/user info)
             var product = await _context.Products
                 .Include(p => p.ProductImages)
                 .Include(p => p.User)
@@ -474,46 +476,97 @@ namespace OnlineShopUniPi.Controllers
             if (product == null)
                 return NotFound();
 
+            // 2) Get the logged-in user ID from claims
             int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int currentUserId);
 
-            var allProducts = await _context.Products
-            .Include(p => p.ProductImages)
-            .Where(p => p.ProductId != id
-                        && p.Quantity > 0
-                        && p.UserId != currentUserId)
-            .ToListAsync();
-
+            // 3) Get the product IDs the user has already purchased
             var purchasedIds = await _context.OrderItems
                 .Where(oi => oi.Order.UserId == currentUserId)
                 .Select(oi => oi.ProductId)
                 .ToListAsync();
 
+            // 4) Get the product IDs the user has marked as favorites
             var favoriteIds = await _context.Favorites
                 .Where(f => f.UserId == currentUserId)
                 .Select(f => f.ProductId)
                 .ToListAsync();
 
+            // 5) Collect categories from purchased products (to detect user interests)
+            var purchasedCategories = await _context.OrderItems
+                .Where(oi => oi.Order.UserId == currentUserId)
+                .Select(oi => oi.Product.Category)
+                .Where(c => c != null)
+                .ToListAsync();
+
+            // 6) Collect categories from favorite products
+            var favoriteCategories = await _context.Favorites
+                .Where(f => f.UserId == currentUserId)
+                .Select(f => f.Product.Category)
+                .Where(c => c != null)
+                .ToListAsync();
+
+            // 7) Count how many times each category appears in purchased products
+            var purchasedCategoryCounts = purchasedCategories
+                .GroupBy(c => c)
+                .ToDictionary(g => g.Key!, g => g.Count());
+
+            // 8) Count how many times each category appears in favorite products
+            var favoriteCategoryCounts = favoriteCategories
+                .GroupBy(c => c)
+                .ToDictionary(g => g.Key!, g => g.Count());
+
+            // 9) Get all available products:
+            // - not the current product
+            // - in stock (Quantity > 0)
+            // - not uploaded by the same user
+            // - not already purchased by the current user
+            var allProducts = await _context.Products
+                .Include(p => p.ProductImages)
+                .Where(p => p.ProductId != id
+                            && p.Quantity > 0
+                            && p.UserId != currentUserId
+                            && !purchasedIds.Contains(p.ProductId))
+                .ToListAsync();
+
+            // 10) Score each product based on similarity and user history
             var scoredProducts = allProducts
-                .Select(p => new
+                .Select(p =>
                 {
-                    Product = p,
-                    Score = (p.Category == product.Category ? 3 : 0)
-                          + (p.Gender == product.Gender ? 2 : 0)
-                          + (purchasedIds.Contains(p.ProductId) ? 1 : 0)
-                          + (favoriteIds.Contains(p.ProductId) ? 1 : 0)
+                    int score = 0;
+
+                    // +10 if product has the same category as the current one
+                    if (p.Category == product.Category)
+                        score += 10;
+
+                    // +2 if product has the same gender as the current one
+                    if (p.Gender == product.Gender)
+                        score += 2;
+
+                    // +2 × number of times user purchased products in this category
+                    if (!string.IsNullOrEmpty(p.Category) && purchasedCategoryCounts.TryGetValue(p.Category, out int pc))
+                        score += pc * 2;
+
+                    // +1 × number of times user has this category in favorites
+                    if (!string.IsNullOrEmpty(p.Category) && favoriteCategoryCounts.TryGetValue(p.Category, out int fc))
+                        score += fc;
+
+                    return new { Product = p, Score = score };
                 })
-                .Where(x => x.Score > 0) 
-                .OrderByDescending(x => x.Score)
-                .ThenBy(x => Guid.NewGuid()) 
-                .Take(4)
+                .Where(x => x.Score > 0)            // keep only products with a positive score
+                .OrderByDescending(x => x.Score)    // sort by highest score first
+                .ThenBy(x => Guid.NewGuid())        // add randomness for variety
+                .Take(4)                            // take the top 4 products
                 .Select(x => x.Product)
                 .ToList();
 
+            // 11) Pass favorite product IDs and recommended products to the view
             ViewData["FavoriteProductIds"] = favoriteIds;
             ViewData["RecommendedProducts"] = scoredProducts;
 
+            // 12) Return the main product details view
             return View(product);
         }
+
 
         // GET: Products/Create
         [Authorize]
