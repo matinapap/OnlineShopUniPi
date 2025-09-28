@@ -81,4 +81,4 @@ See the full [User Manual](./UserManual.pdf) for step-by-step usage.
 ---
 
 ## ⚖️ License
-This project is licensed under the [ΜΙΤ](./LICENSE).
+This project is licensed under the [ΜΙΤ](./LICENSE) License.
