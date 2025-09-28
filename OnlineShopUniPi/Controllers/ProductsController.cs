@@ -329,7 +329,7 @@ namespace OnlineShopUniPi.Controllers
 
             // --- STEP 1: Candidate products (exclude purchased & favorite ones first) ---
             var candidates = allProducts
-                .Where(p => !purchasedIds.Contains(p.ProductId) && !favoriteIds.Contains(p.ProductId))
+                .Where(p => !purchasedIds.Contains(p.ProductId) && !favoriteIds.Contains(p.ProductId) && p.UserId != currentUserId)
                 .ToList();
 
             // --- STEP 2: Compute scores & select top 5 recommendations ---
