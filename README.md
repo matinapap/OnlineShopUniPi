@@ -58,24 +58,48 @@ The application provides a functional **online marketplace** with the following 
 
 ## 📸 Screenshots
 
-<img width="976" height="496" alt="image" src="https://github.com/user-attachments/assets/85aa9f22-ecfa-4e45-b3fa-45736f07653a" />
-<img width="959" height="332" alt="image" src="https://github.com/user-attachments/assets/eeffe92e-450b-4184-b0d6-3f914a241a30" />
-<img width="1859" height="829" alt="Στιγμιότυπο οθόνης 2025-09-20 074422" src="https://github.com/user-attachments/assets/eb9eea8d-d9cc-46b2-899b-7a0ce08f4c58" />
-<img width="968" height="847" alt="Στιγμιότυπο οθόνης 2025-09-20 074533" src="https://github.com/user-attachments/assets/45f9fc32-ae5e-4074-804b-e680719b0781" />
-<img width="1886" height="905" alt="Στιγμιότυπο οθόνης 2025-09-20 074728" src="https://github.com/user-attachments/assets/5b241c38-8b5e-4da4-8f31-78fa9311da4a" />
-<img width="1892" height="943" alt="Στιγμιότυπο οθόνης 2025-09-20 075658" src="https://github.com/user-attachments/assets/6e5a2858-c656-4fdc-8475-145d070da7c7" />
-<img width="1343" height="847" alt="Στιγμιότυπο οθόνης 2025-09-20 075722" src="https://github.com/user-attachments/assets/5b464ed3-9b35-48a6-b1fc-f3f53cfc2265" />
-<img width="1895" height="927" alt="Στιγμιότυπο οθόνης 2025-09-20 080224" src="https://github.com/user-attachments/assets/e8afaa60-1482-4b1f-80be-8b7466988a99" />
-<img width="1908" height="926" alt="Στιγμιότυπο οθόνης 2025-09-20 080424" src="https://github.com/user-attachments/assets/586a990b-4ea4-4c4d-a08c-ac22b2e3058e" />
-<img width="1885" height="942" alt="Στιγμιότυπο οθόνης 2025-09-21 074133" src="https://github.com/user-attachments/assets/259423cc-2b85-4d8e-bab4-6fd04f175573" />
-<img width="1888" height="798" alt="Στιγμιότυπο οθόνης 2025-09-21 073740" src="https://github.com/user-attachments/assets/5555d449-4564-4d20-82ff-cc01b9c948d7" />
+## 👤 Guest User
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/85aa9f22-ecfa-4e45-b3fa-45736f07653a" width="250" />
+  <img src="https://github.com/user-attachments/assets/eb9eea8d-d9cc-46b2-899b-7a0ce08f4c58" width="250" />
+</p>
+
 ---
 
-<img width="1883" height="849" alt="Στιγμιότυπο οθόνης 2025-09-20 080644" src="https://github.com/user-attachments/assets/93723996-8e2d-4a4e-bf65-a291dd35173f" />
-<img width="1908" height="851" alt="Στιγμιότυπο οθόνης 2025-09-20 080711" src="https://github.com/user-attachments/assets/5644a2ee-fec3-411c-844d-375803685e36" />
-<img width="1900" height="926" alt="Στιγμιότυπο οθόνης 2025-09-20 080741" src="https://github.com/user-attachments/assets/ff69ddd1-0dfa-493f-b42f-f3e3849e28d8" />
-<img width="1875" height="933" alt="Στιγμιότυπο οθόνης 2025-09-20 080801" src="https://github.com/user-attachments/assets/88113837-d83e-40ee-ac6d-508fa72b0eb6" />
+## 🔑 Logged-in User
 
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/eeffe92e-450b-4184-b0d6-3f914a241a30" width="250" />
+  <img src="https://github.com/user-attachments/assets/45f9fc32-ae5e-4074-804b-e680719b0781" width="250" />
+  <img src="https://github.com/user-attachments/assets/5b241c38-8b5e-4da4-8f31-78fa9311da4a" width="250" />
+</p>
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/6e5a2858-c656-4fdc-8475-145d070da7c7" width="250" />
+  <img src="https://github.com/user-attachments/assets/5b464ed3-9b35-48a6-b1fc-f3f53cfc2265" width="250" />
+  <img src="https://github.com/user-attachments/assets/e8afaa60-1482-4b1f-80be-8b7466988a99" width="250" />
+</p>
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/586a990b-4ea4-4c4d-a08c-ac22b2e3058e" width="250" />
+  <img src="https://github.com/user-attachments/assets/259423cc-2b85-4d8e-bab4-6fd04f175573" width="250" />
+  <img src="https://github.com/user-attachments/assets/5555d449-4564-4d20-82ff-cc01b9c948d7" width="250" />
+</p>
+
+---
+
+## 🛠️ Admin
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/93723996-8e2d-4a4e-bf65-a291dd35173f" width="250" />
+  <img src="https://github.com/user-attachments/assets/5644a2ee-fec3-411c-844d-375803685e36" width="250" />
+  <img src="https://github.com/user-attachments/assets/ff69ddd1-0dfa-493f-b42f-f3e3849e28d8" width="250" />
+</p>
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/88113837-d83e-40ee-ac6d-508fa72b0eb6" width="250" />
+</p>
 
 ---
 
