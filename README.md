@@ -81,4 +81,4 @@ See the full [User Manual](./UserManual.pdf) for step-by-step usage.
 ---
 
 ## ⚖️ License
-This project is licensed under the [MIT License](./LICENSE).
+This project is licensed under the [GNU General Public License v3.0](./LICENSE).
