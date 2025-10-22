@@ -298,7 +298,7 @@ namespace OnlineShopUniPi.Controllers
 
                 if (!string.IsNullOrEmpty(genderNorm) && !string.IsNullOrEmpty(p.Gender) &&
                     string.Equals(p.Gender.Trim(), genderNorm, StringComparison.OrdinalIgnoreCase))
-                    score += 0.8;
+                    score += 3.0;
 
                 // (C) Price range scoring (exact match > near match)
                 if (minPrice.HasValue && maxPrice.HasValue)
