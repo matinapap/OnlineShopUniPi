@@ -55,6 +55,15 @@ The application provides a functional **online marketplace** with the following 
 - **IDE:** Visual Studio  
 
 ---
+## 🗄️ Database
+
+The project uses **Microsoft SQL Server** as the database engine and was managed through **Microsoft SQL Server Management Studio (SSMS)**.  
+
+### 📊 Database Schema
+
+<img width="753" height="745" alt="Στιγμιότυπο οθόνης 2025-10-22 232306" src="https://github.com/user-attachments/assets/1bff68ec-9fe3-4d67-86f0-e17ec54f4c2c" />
+
+---
 
 ## 📸 Screenshots
 
