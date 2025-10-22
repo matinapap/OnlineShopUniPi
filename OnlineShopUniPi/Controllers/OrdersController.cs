@@ -188,9 +188,6 @@ namespace OnlineShopUniPi.Controllers
             return View(resultOrders.OrderByDescending(o => o.OrderDate).ToList());
         }
 
-
-
-
         // Update order status (AJAX call with JSON body)
         [HttpPost]
         [ValidateAntiForgeryToken]

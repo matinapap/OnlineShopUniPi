@@ -1,4 +1,7 @@
-﻿namespace OnlineShopUniPi.Helpers
+﻿// Provides JSON-based extension methods for storing and retrieving complex objects in ASP.NET Core session.
+// Enables seamless serialization and deserialization of objects via ISession.
+
+namespace OnlineShopUniPi.Helpers
 {
     using Microsoft.AspNetCore.Http;
     using Newtonsoft.Json;
