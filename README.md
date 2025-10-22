@@ -31,7 +31,39 @@ The application provides a functional **online marketplace** with the following 
   - Manage users, orders, and products  
 
 - 🤖 **Recommendation Algorithm**  
-  - Suggests products based on purchases and favorites  
+  - Suggests products based on purchases and favorites
+
+---
+
+## 🎯 Recommendation System
+
+The application includes a **personalized recommendation system** that suggests products to users based on their history and preferences.
+
+### 🔎 How it works
+
+- **User history based**:
+  - Products the user has purchased → strongly increase the weight of those categories.
+  - Products the user has added to favorites → slightly increase the weight.
+
+- **Takes into account user filters**: gender, size, category, and price range.
+
+- **Computes a score for each product**:
+  - Category match with purchase history ×3
+  - Category match with favorites ×1
+  - Matches selected category filter +2
+  - Matches selected size +1
+  - Matches selected gender +3
+  - Matches price range +1.2 (or smaller bonus if close to range)
+
+- **Excludes** products already purchased or already in favorites.
+
+- **Selects the top 5** products with the highest score.
+
+- **Fallback logic**:
+  - If fewer than 5 results, it adds products from favorites.
+  - If still fewer, it fills the list with random products.
+
+This approach ensures that recommendations are **personalized, explainable, and always available**, even when user history is limited.
 
 ---
 
