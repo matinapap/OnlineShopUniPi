@@ -901,7 +901,10 @@ namespace OnlineShopUniPi.Controllers
 
             await _context.SaveChangesAsync();
 
-            return RedirectToAction("Index", "Products");
+            if (User.IsInRole("Admin"))
+                return RedirectToAction("Index", "Products");
+
+            return RedirectToAction("GetProducts");
         }
 
     }
