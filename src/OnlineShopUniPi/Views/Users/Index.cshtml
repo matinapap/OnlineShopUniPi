@@ -1,0 +1,67 @@
+﻿@model IEnumerable<OnlineShopUniPi.Models.User>
+
+@{
+    ViewData["Title"] = "ClothingPage";
+}
+
+<h1 class="my-4 text-center specific-title">Users</h1>
+
+<!-- Search Form -->
+<form asp-action="Index" method="get" class="row g-3 mb-4">
+    <div class="col-md-3">
+        <input type="text" name="searchId" class="form-control" placeholder="Search by ID" value="@Context.Request.Query["searchId"]" />
+    </div>
+    <div class="col-md-3">
+        <input type="text" name="searchUsername" class="form-control" placeholder="Search by Username" value="@Context.Request.Query["searchUsername"]" />
+    </div>
+    <div class="col-md-auto">
+        <button type="submit" class="btn btn-primary">Search</button>
+        <a asp-action="Index" class="btn btn-outline-secondary ms-2">Reset</a>
+    </div>
+</form>
+
+<p>
+    <a asp-action="Create" class="btn btn-success">+ Create New User</a>
+</p>
+
+<table class="table table-bordered table-striped table-hover">
+    <thead class="table-dark text-center">
+        <tr>
+            <th>@Html.DisplayNameFor(model => model.First().UserId)</th>
+            <th>@Html.DisplayNameFor(model => model.First().FirstName)</th>
+            <th>@Html.DisplayNameFor(model => model.First().LastName)</th>
+            <th>@Html.DisplayNameFor(model => model.First().Username)</th>
+            <th>@Html.DisplayNameFor(model => model.First().Email)</th>
+            <th>@Html.DisplayNameFor(model => model.First().PhoneNumber)</th>
+            <th>@Html.DisplayNameFor(model => model.First().Role)</th>
+            <th>@Html.DisplayNameFor(model => model.First().Address)</th>
+            <th>@Html.DisplayNameFor(model => model.First().City)</th>
+            <th>@Html.DisplayNameFor(model => model.First().Country)</th>
+            <th>@Html.DisplayNameFor(model => model.First().RegistrationDate)</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td class="text-center">@item.UserId</td>
+                <td>@item.FirstName</td>
+                <td>@item.LastName</td>
+                <td>@item.Username</td>
+                <td>@item.Email</td>
+                <td>@item.PhoneNumber</td>
+                <td>@item.Role</td>
+                <td>@item.Address</td>
+                <td>@item.City</td>
+                <td>@item.Country</td>
+                <td class="text-center">@item.RegistrationDate?.ToString("dd/MM/yyyy")</td>
+                <td class="text-center">
+                    <a asp-action="Edit" asp-route-id="@item.UserId" class="btn btn-sm btn-warning me-1">Edit</a>
+                    <a asp-action="Details" asp-route-id="@item.UserId" class="btn btn-sm btn-info me-1">Details</a>
+                    <a asp-action="Delete" asp-route-id="@item.UserId" class="btn btn-sm btn-danger">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

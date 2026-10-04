@@ -1,0 +1,51 @@
+﻿@model OnlineShopUniPi.Models.Product
+
+@{
+    ViewData["Title"] = "Διαγραφή Προϊόντος";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-5">
+    <div class="card shadow rounded-4">
+        <div class="card-header bg-danger text-white text-center">
+            <h3>Είστε σίγουρος ότι θέλετε να διαγράψετε το προϊόν;</h3>
+        </div>
+
+        <div class="card-body">
+            <h4 class="mb-4 text-center text-muted">Προεπισκόπηση Προϊόντος</h4>
+
+            <dl class="row">
+                <dt class="col-sm-4 fw-bold">Τίτλος</dt>
+                <dd class="col-sm-8">@Model.Title</dd>
+
+                <dt class="col-sm-4 fw-bold">Περιγραφή</dt>
+                <dd class="col-sm-8">@Model.Description</dd>
+
+                <dt class="col-sm-4 fw-bold">Κατηγορία</dt>
+                <dd class="col-sm-8">@Model.Category</dd>
+
+                <dt class="col-sm-4 fw-bold">Τιμή</dt>
+                <dd class="col-sm-8">@Model.Price.ToString("C")</dd>
+
+                <dt class="col-sm-4 fw-bold">Κατάσταση</dt>
+                <dd class="col-sm-8">@Model.Condition</dd>
+
+                <dt class="col-sm-4 fw-bold">Ημερομηνία Δημιουργίας</dt>
+                <dd class="col-sm-8">@Model.CreatedAt</dd>
+
+            </dl>
+
+            <form asp-action="Delete" class="my-4 text-center specific-title">
+                <input type="hidden" asp-for="ProductId" />
+
+                <button type="submit" class="btn btn-danger px-4 me-2">
+                    <i class="bi bi-trash-fill me-1"></i> Διαγραφή
+                </button>
+
+                <a asp-action="GetProducts" class="btn btn-secondary px-4">
+                    <i class="bi bi-arrow-left-circle me-1"></i> Πίσω
+                </a>
+            </form>
+        </div>
+    </div>
+</div>

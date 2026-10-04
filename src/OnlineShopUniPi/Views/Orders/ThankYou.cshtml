@@ -1,0 +1,15 @@
+﻿@model OnlineShopUniPi.Models.Order
+
+@{
+    ViewData["Title"] = "Successful Order";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container checkout-container">
+    <h1 class="specific-title mb-4">🎉 Thank you for your order!</h1>
+
+    <p>Your order number is: <strong>@Model.OrderId</strong></p>
+    <p>You will receive an email notification once it is shipped.</p>
+
+    <a href="/" class="btn btn-success mt-3">Back to Home</a>
+</div>

@@ -1,0 +1,105 @@
+﻿@using Microsoft.AspNetCore.Authentication
+@using Microsoft.AspNetCore.Authorization
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - ClothSwap</title>
+    <!-- CSS dependencies -->
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+</head>
+
+<!-- Adds a data attribute to know if the user is authenticated (true/false) -->
+<body data-authenticated="@User.Identity.IsAuthenticated.ToString().ToLower()">
+    <header class="main-header">
+        <div class="logo">
+            <a asp-controller="Home" asp-action="Index">ClothSwap</a>
+        </div>
+
+        @using Microsoft.AspNetCore.Identity
+
+        @if (User.Identity.IsAuthenticated)
+        {
+            if (User.IsInRole("Admin"))
+            {
+                <!-- Administrator -->
+                <nav>
+                    <ul class="nav-links">
+                        <li><a asp-controller="Users" asp-action="Index">Users</a></li>
+                        <li><a asp-controller="Products" asp-action="Index">Products</a></li>
+                        <li><a asp-controller="Orders" asp-action="AllOrders">Orders</a></li>
+                    </ul>
+                </nav>
+
+                <div class="profile-link">
+                    @await Html.PartialAsync("_UserProfile")
+                </div>
+            }
+            else
+            {
+                <!-- Regular User -->
+                <nav>
+                    <ul class="nav-links">
+                        <li><a asp-controller="Home" asp-action="Index">Home</a></li>
+                        <li><a asp-controller="Home" asp-action="ClothingPage">Shop</a></li>
+                        <li><a asp-controller="Products" asp-action="GetProducts">Sell</a></li>
+                        <li><a asp-controller="Orders" asp-action="MyOrders">Orders</a></li>
+                        <li><a asp-controller="Orders" asp-action="MyPurchases">My Purchases</a></li>
+                    </ul>
+                </nav>
+
+                <div class="profile-link">
+                    <a asp-controller="Products" asp-action="Favorites" class="icon-link"><i class="fas fa-heart"></i></a>
+                    <a asp-controller="Products" asp-action="Cart" class="icon-link"><i class="fas fa-shopping-bag"></i></a>
+                    @await Html.PartialAsync("_UserProfile")
+                </div>
+            }
+        }
+        else
+        {
+            <!-- Visitor -->
+            <nav>
+                <ul class="nav-links">
+                    <li><a asp-controller="Home" asp-action="Index">Home</a></li>
+                    <li><a asp-controller="Home" asp-action="ClothingPage">Shop</a></li>
+                    <li><a asp-controller="Users" asp-action="LoginSignup">Sell</a></li>
+                </ul>
+            </nav>
+
+            <div class="profile-link">
+                @await Html.PartialAsync("_UserProfile")
+            </div>
+        }
+    </header>
+
+    <!-- Main content area where each view is rendered -->
+    <div class="main-content">
+        @Html.AntiForgeryToken()
+        @RenderBody()
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <div class="copyright">
+                &copy; 2025 - ClothSwap -
+                <a asp-controller="Home" asp-action="Privacy">Privacy</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript dependencies -->
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+
+    <!-- Optional scripts from child views -->
+    @await RenderSectionAsync("Scripts", required: false)
+    @await RenderSectionAsync("AlertScript", required: false)
+</body>
+</html>
